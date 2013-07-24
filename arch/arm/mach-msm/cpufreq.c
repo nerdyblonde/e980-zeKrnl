@@ -358,16 +358,19 @@ static int __cpuinit msm_cpufreq_init(struct cpufreq_policy *policy)
 				policy->cpu, cur_freq);
 		return -EINVAL;
 	}
-	/*
-	 * Call set_cpu_freq unconditionally so that when cpu is set to
-	 * online, frequency limit will always be updated.
-	 */
-	ret = set_cpu_freq(policy, table[index].frequency, table[index].index);
-	if (ret)
-		return ret;
-	pr_debug("cpufreq: cpu%d init at %d switching to %d\n",
-			policy->cpu, cur_freq, table[index].frequency);
-	policy->cur = table[index].frequency;
+
+	if (cur_freq != table[index].frequency) {
+		int ret = 0;
+		ret = acpuclk_set_rate(policy->cpu, table[index].frequency,
+				SETRATE_CPUFREQ);
+		if (ret)
+			return ret;
+		pr_info("cpufreq: cpu%d init at %d switching to %d\n",
+				policy->cpu, cur_freq, table[index].frequency);
+		cur_freq = table[index].frequency;
+	}
+
+	policy->cur = CONFIG_MSM_CPU_FREQ_MAX;
 
 	policy->cpuinfo.transition_latency =
 		acpuclk_get_switch_time() * NSEC_PER_USEC;
@@ -387,14 +390,17 @@ static int __cpuinit msm_cpufreq_cpu_callback(struct notifier_block *nfb,
 
 	switch (action & ~CPU_TASKS_FROZEN) {
 	case CPU_ONLINE:
+	case CPU_ONLINE_FROZEN:
 		per_cpu(cpufreq_suspend, cpu).device_suspended = 0;
 		break;
 	case CPU_DOWN_PREPARE:
+	case CPU_DOWN_PREPARE_FROZEN:
 		mutex_lock(&per_cpu(cpufreq_suspend, cpu).suspend_mutex);
 		per_cpu(cpufreq_suspend, cpu).device_suspended = 1;
 		mutex_unlock(&per_cpu(cpufreq_suspend, cpu).suspend_mutex);
 		break;
 	case CPU_DOWN_FAILED:
+	case CPU_DOWN_FAILED_FROZEN:
 		per_cpu(cpufreq_suspend, cpu).device_suspended = 0;
 		break;
 	/*
@@ -425,6 +431,34 @@ static int __cpuinit msm_cpufreq_cpu_callback(struct notifier_block *nfb,
 
 static struct notifier_block __refdata msm_cpufreq_cpu_notifier = {
 	.notifier_call = msm_cpufreq_cpu_callback,
+};
+
+#ifdef CONFIG_CPU_FREQ_GOV_INTELLIDEMAND
+extern bool lmf_screen_state;
+#endif
+
+static void msm_cpu_early_suspend(struct early_suspend *h)
+{
+
+#ifdef CONFIG_CPU_FREQ_GOV_INTELLIDEMAND
+	lmf_screen_state = false;
+#endif
+
+}
+
+static void msm_cpu_late_resume(struct early_suspend *h)
+{
+
+#ifdef CONFIG_CPU_FREQ_GOV_INTELLIDEMAND
+	lmf_screen_state = true;
+#endif
+
+}
+
+static struct early_suspend msm_cpu_early_suspend_handler = {
+	.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN,
+	.suspend = msm_cpu_early_suspend,
+	.resume = msm_cpu_late_resume,
 };
 
 /*
@@ -671,6 +705,7 @@ static int __init msm_cpufreq_register(void)
 	platform_driver_probe(&msm_cpufreq_plat_driver, msm_cpufreq_probe);
 	msm_cpufreq_wq = alloc_workqueue("msm-cpufreq", WQ_HIGHPRI, 0);
 	register_hotcpu_notifier(&msm_cpufreq_cpu_notifier);
+	register_early_suspend(&msm_cpu_early_suspend_handler);
 	return cpufreq_register_driver(&msm_cpufreq_driver);
 }
 
