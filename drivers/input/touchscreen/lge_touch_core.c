@@ -3683,7 +3683,141 @@ static struct sys_device lge_touch_sys_device = {
 	.cls	= &lge_touch_sys_class,
 };
 
+<<<<<<< HEAD
 static int touch_probe(struct i2c_client *client, const struct i2c_device_id *id)
+=======
+#ifdef CONFIG_TOUCHSCREEN_CHARGER_NOTIFY
+static void touch_external_power_changed(struct power_supply *psy)
+{
+	int status;
+	struct lge_touch_data *ts = container_of(psy, struct lge_touch_data, touch_psy);
+
+	status = power_supply_am_i_supplied(psy);
+
+	pr_debug("psy name = %s ... status = %d\n", psy->name, status);
+
+	if (ts->charger_type != status) {
+		ts->charger_type = status;
+		queue_work(touch_wq, &ts->work_charger);
+	}
+}
+
+static enum power_supply_property touch_power_props_mains[] = {
+	POWER_SUPPLY_PROP_PRESENT,
+	POWER_SUPPLY_PROP_ONLINE
+};
+
+static int touch_power_get_property_mains(struct power_supply *psy,
+			enum power_supply_property psp,
+			union power_supply_propval *val)
+{
+	switch (psp) {
+	case POWER_SUPPLY_PROP_PRESENT:
+	case POWER_SUPPLY_PROP_ONLINE:
+		val->intval = 0;
+		return 0;
+	default:
+		return -EINVAL;
+	}
+	return -EINVAL;
+}
+
+/*
+ * Touch work for charger
+ */
+static void touch_work_charger(struct work_struct *work)
+{
+	struct lge_touch_data *ts =
+			container_of(work, struct lge_touch_data, work_charger);
+
+	TOUCH_INFO_MSG("CHARGER = %d\n", ts->charger_type);
+
+	if (ts->curr_resume_state)
+		touch_device_func->ic_ctrl(ts->client,
+					IC_CTRL_CHARGER, ts->charger_type);
+}
+
+static void touch_psy_init(struct lge_touch_data *ts)
+{
+	int rc;
+
+	INIT_WORK(&ts->work_charger, touch_work_charger);
+
+	ts->touch_psy.name = "touch";
+	ts->touch_psy.type = POWER_SUPPLY_TYPE_UNKNOWN;
+	ts->touch_psy.properties = touch_power_props_mains,
+	ts->touch_psy.num_properties = ARRAY_SIZE(touch_power_props_mains);
+	ts->touch_psy.get_property = touch_power_get_property_mains;
+	ts->touch_psy.external_power_changed = touch_external_power_changed;
+
+	rc = power_supply_register(NULL, &ts->touch_psy);
+	if (rc < 0) {
+		pr_err("power_supply_register FAILED*** rc = %d\n", rc);
+	}
+	else {
+		pr_debug("power_supply_register SUCCESS\n");
+	}
+}
+#endif
+
+#ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE
+static ssize_t lge_touch_sweep2wake_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	size_t count = 0;
+
+	count += sprintf(buf, "%d\n", s2w_switch);
+
+	return count;
+}
+
+static ssize_t lge_touch_sweep2wake_dump(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t count)
+{
+	if (buf[0] >= '0' && buf[0] <= '2' && buf[1] == '\n')
+                if (s2w_switch != buf[0] - '0')
+		        s2w_switch = buf[0] - '0';
+
+	return count;
+}
+
+static DEVICE_ATTR(sweep2wake, (S_IWUSR|S_IRUGO),
+	lge_touch_sweep2wake_show, lge_touch_sweep2wake_dump);
+#endif
+
+static struct kobject *android_touch_kobj;
+
+static int lge_touch_sysfs_init(void)
+{
+	int ret ;
+
+	android_touch_kobj = kobject_create_and_add("android_touch", NULL) ;
+	if (android_touch_kobj == NULL) {
+		pr_debug("[lge_touch]%s: subsystem_register failed\n", __func__);
+		ret = -ENOMEM;
+		return ret;
+	}
+#ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE
+	ret = sysfs_create_file(android_touch_kobj, &dev_attr_sweep2wake.attr);
+	if (ret) {
+		printk(KERN_ERR "%s: sysfs_create_file failed\n", __func__);
+		return ret;
+	}
+#endif
+	return 0 ;
+}
+
+static void lge_touch_sysfs_deinit(void)
+{
+#ifdef CONFIG_TOUCHSCREEN_SWEEP2WAKE
+	sysfs_remove_file(android_touch_kobj, &dev_attr_sweep2wake.attr);
+#endif
+	kobject_del(android_touch_kobj);
+}
+
+static int touch_probe(struct i2c_client *client,
+				const struct i2c_device_id *id)
+>>>>>>> d15de9c... drivers/touchscreen: add lge_touch android_touch kobject to fix s2wi in one position across devices
 {
 	struct lge_touch_data *ts;
 	int ret = 0;
@@ -3930,7 +4064,11 @@ static int touch_probe(struct i2c_client *client, const struct i2c_device_id *id
 	register_early_suspend(&ts->early_suspend);
 #endif
 
+<<<<<<< HEAD
         atomic_set(&ts->keypad_enable, 1);
+=======
+        lge_touch_sysfs_init();
+>>>>>>> d15de9c... drivers/touchscreen: add lge_touch android_touch kobject to fix s2wi in one position across devices
 
 	/* Register sysfs for making fixed communication path to framework layer */
 	ret = sysdev_class_register(&lge_touch_sys_class);
@@ -4014,7 +4152,11 @@ static int touch_remove(struct i2c_client *client)
 
 	unregister_early_suspend(&ts->early_suspend);
 
+<<<<<<< HEAD
 	if (ts->pdata->role->operation_mode)
+=======
+        lge_touch_sysfs_deinit();
+>>>>>>> d15de9c... drivers/touchscreen: add lge_touch android_touch kobject to fix s2wi in one position across devices
 
 	pm_runtime_set_suspended(&client->dev);
 	pm_runtime_disable(&client->dev);
