@@ -13,7 +13,6 @@
  * GNU General Public License for more details.
  *
  */
-#include <linux/earlysuspend.h>
 #include <linux/workqueue.h>
 #include <linux/cpu.h>
 #include <linux/sched.h>
@@ -21,18 +20,24 @@
 #include <linux/module.h>
 #include <linux/rq_stats.h>
 
+#include <linux/module.h>
+#include <linux/kobject.h>
+#include <linux/sysfs.h>
+
 //#define DEBUG_INTELLI_PLUG
 #undef DEBUG_INTELLI_PLUG
 
 #define INTELLI_PLUG_MAJOR_VERSION	1
-#define INTELLI_PLUG_MINOR_VERSION	6
+#define INTELLI_PLUG_MINOR_VERSION	8
 
-#define DEF_SAMPLING_RATE		(50000)
-#define DEF_SAMPLING_MS			(200)
+#define DEF_SAMPLING_MS			(250)
+#define BUSY_SAMPLING_MS		(100)
 
 #define DUAL_CORE_PERSISTENCE		15
 #define TRI_CORE_PERSISTENCE		12
 #define QUAD_CORE_PERSISTENCE		9
+
+#define BUSY_PERSISTENCE		30
 
 #define RUN_QUEUE_THRESHOLD		38
 
@@ -48,8 +53,14 @@ module_param(intelli_plug_active, uint, 0644);
 static unsigned int eco_mode_active = 0;
 module_param(eco_mode_active, uint, 0644);
 
+static unsigned int sampling_time = 0;
+
 static unsigned int persist_count = 0;
+static unsigned int busy_persist_count = 0;
+
 static bool suspended = false;
+
+static int sleep_active = 0;
 
 #define NR_FSHIFT	3
 static unsigned int nr_fshift = NR_FSHIFT;
@@ -196,6 +207,18 @@ static void __cpuinit intelli_plug_work_fn(struct work_struct *work)
 				}
 			}
 		}
+		/* it's busy.. lets help it a bit */
+		if (cpu_count > 2) {
+			if (busy_persist_count == 0) {
+				sampling_time = BUSY_SAMPLING_MS;
+				busy_persist_count = BUSY_PERSISTENCE;
+			}
+		} else {
+			if (busy_persist_count > 0)
+				busy_persist_count--;
+			else
+				sampling_time = DEF_SAMPLING_MS;
+		}
 
 		if (!suspended) {
 			switch (cpu_count) {
@@ -263,11 +286,10 @@ static void __cpuinit intelli_plug_work_fn(struct work_struct *work)
 #endif
 	}
 	schedule_delayed_work_on(0, &intelli_plug_work,
-		msecs_to_jiffies(DEF_SAMPLING_MS));
+		msecs_to_jiffies(sampling_time));
 }
 
-#ifdef CONFIG_HAS_EARLYSUSPEND
-static void intelli_plug_early_suspend(struct early_suspend *handler)
+static void intelli_plug_suspend(void)
 {
 	int i;
 	int num_of_active_cores = 4;
@@ -284,7 +306,7 @@ static void intelli_plug_early_suspend(struct early_suspend *handler)
 	}
 }
 
-static void __cpuinit intelli_plug_late_resume(struct early_suspend *handler)
+static void __cpuinit intelli_plug_resume(void)
 {
 	int num_of_active_cores;
 	int i;
@@ -309,32 +331,83 @@ static void __cpuinit intelli_plug_late_resume(struct early_suspend *handler)
 		msecs_to_jiffies(10));
 }
 
-static struct early_suspend intelli_plug_early_suspend_struct_driver = {
-	.level = EARLY_SUSPEND_LEVEL_DISABLE_FB + 10,
-	.suspend = intelli_plug_early_suspend,
-	.resume = intelli_plug_late_resume,
-};
-#endif	/* CONFIG_HAS_EARLYSUSPEND */
+static ssize_t __cpuinit sleep_active_store(struct kobject *kobj,
+                struct kobj_attribute *attr, const char *buf, size_t count)
+{
+	int input = 0;
+
+	sscanf(buf, "%d", &input);
+
+	if (input == 0) {
+		if (sleep_active == 1) {
+			intelli_plug_resume();
+			sleep_active = 0;
+		}
+	} else {
+		if (sleep_active == 0) {
+			intelli_plug_suspend();
+			sleep_active = 1;
+		}
+	}
+	return 0;
+}
+
+static ssize_t sleep_active_show(struct kobject *kobj,
+                                struct kobj_attribute *attr, char *buf)
+{
+	return sprintf(buf, "%d", sleep_active);
+}
+
+static struct kobj_attribute sleep_active_attribute_driver = 
+	__ATTR(sleep_active_status, 0666,
+		sleep_active_show, sleep_active_store);
+
+static struct attribute *sleep_active_attrs[] =
+        {
+                &sleep_active_attribute_driver.attr,
+                NULL,
+        };
+
+static struct attribute_group sleep_active_attr_group =
+        {
+                .attrs = sleep_active_attrs,
+        };
+
+static struct kobject *sleep_active_kobj;
 
 int __init intelli_plug_init(void)
 {
 	/* We want all CPUs to do sampling nearly on same jiffy */
-	int delay = usecs_to_jiffies(DEF_SAMPLING_RATE);
+	int sysfs_result;
 
-	if (num_online_cpus() > 1)
-		delay -= jiffies % delay;
+	sleep_active_kobj =
+		kobject_create_and_add("intelliplug", kernel_kobj);
+
+        if (!sleep_active_kobj) {
+                pr_err("%s intelliplug create failed!\n",
+                        __FUNCTION__);
+                return -ENOMEM;
+        }
+
+        sysfs_result = sysfs_create_group(sleep_active_kobj,
+                        &sleep_active_attr_group);
+
+        if (sysfs_result) {
+                pr_info("%s sysfs create failed!\n", __FUNCTION__);
+                kobject_put(sleep_active_kobj);
+        }
 
 	//pr_info("intelli_plug: scheduler delay is: %d\n", delay);
 	pr_info("intelli_plug: version %d.%d by faux123\n",
 		 INTELLI_PLUG_MAJOR_VERSION,
 		 INTELLI_PLUG_MINOR_VERSION);
 
-	INIT_DELAYED_WORK(&intelli_plug_work, intelli_plug_work_fn);
-	schedule_delayed_work_on(0, &intelli_plug_work, delay);
+	sampling_time = DEF_SAMPLING_MS;
 
-#ifdef CONFIG_HAS_EARLYSUSPEND
-	register_early_suspend(&intelli_plug_early_suspend_struct_driver);
-#endif
+	INIT_DELAYED_WORK(&intelli_plug_work, intelli_plug_work_fn);
+	schedule_delayed_work_on(0, &intelli_plug_work,
+		msecs_to_jiffies(sampling_time));
+
 	return 0;
 }
 
