@@ -34,6 +34,20 @@
 #define UPDATE_BUSY_VAL		1000000
 #define UPDATE_BUSY		50
 
+/*
+ * Expected delay for post-interrupt processing on A3xx.
+ * The delay may be longer, gradually increase the delay
+ * to compensate.  If the GPU isn't done by max delay,
+ * it's working on something other than just the final
+ * command sequence so stop waiting for it to be idle.
+ */
+#define INIT_UDELAY		200
+#define MAX_UDELAY		2000
+
+#ifdef CONFIG_CPU_FREQ_GOV_ELEMENTALX
+int graphics_boost = 6;
+#endif
+
 struct clk_pair {
 	const char *name;
 	uint map;
@@ -169,6 +183,10 @@ void kgsl_pwrctrl_pwrlevel_change(struct kgsl_device *device,
 	}
 
 	trace_kgsl_pwrlevel(device, pwr->active_pwrlevel, pwrlevel->gpu_freq);
+
+#ifdef CONFIG_CPU_FREQ_GOV_ELEMENTALX
+        graphics_boost = pwr->active_pwrlevel;
+#endif
 }
 
 EXPORT_SYMBOL(kgsl_pwrctrl_pwrlevel_change);
