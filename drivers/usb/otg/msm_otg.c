@@ -50,7 +50,6 @@
 #include <mach/msm_bus.h>
 #include <mach/rpm-regulator.h>
 
-<<<<<<< HEAD
 #ifdef CONFIG_LGE_PM
 #include <mach/restart.h>
 #include <linux/reboot.h>
@@ -69,12 +68,10 @@
 #include "../../../sound/soc/codecs/wcd9310.h"
 #endif /*CONFIG_LGE_AUX_NOISE*/
 
-=======
 #ifdef CONFIG_FORCE_FAST_CHARGE
 #include <linux/fastchg.h>
 #endif
 
->>>>>>> 18eb498... fastcharge: initial adaptation for Nexus 4
 #define MSM_USB_BASE	(motg->regs)
 #define DRIVER_NAME	"msm_otg"
 
