@@ -150,3 +150,10 @@ obj-$(CONFIG_LGE_BROADCAST_ONESEG) += broadcast/
 obj-$(CONFIG_MSM_QDSS)		+= coresight/
 #FeliCa
 obj-$(CONFIG_LGE_FELICA) 	+= felica/
+
+obj-$(CONFIG_CORESIGHT)		+= coresight/
+
+ifeq (1, $(shell if [ -d drivers/exfat ] ; then echo 1 ; fi))
+obj-y   += exfat/
+endif
+
