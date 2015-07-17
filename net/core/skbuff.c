@@ -1758,7 +1758,6 @@ done:
 		lock_sock(sk);
 	}
 
-	splice_shrink_spd(pipe, &spd);
 	return ret;
 }
 
