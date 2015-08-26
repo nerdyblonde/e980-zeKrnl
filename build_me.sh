@@ -39,7 +39,7 @@ echo " + CROSS_COMPILE variable set"
 export ARCH="arm"							# I'm 99% sure you won't need to change this. Only if someday you make a x86 android build
 
 # Set defconfig to build
-defconfig="zeKrnl_e980_defconfig"		# Configure this! This is a defconfig file for your device
+defconfig="cyanogenmod_e980_defconfig"		# Configure this! This is a defconfig file for your device
 											# If not found, first make will just fail to interactive kernel config
 											# and you're in a deep sheet.
 echo " + defconfig variable set to $defconfig"
