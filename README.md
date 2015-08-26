@@ -15,23 +15,23 @@ based ROMs will support it. I myself I'm using it on PAC 4.4.
 
 ## Progress
 
-- [ ] CPU Governors
-	- [ ] Intellidemand
-	- [ ] DanceDance (unz unz unz unz)
+- [x] CPU Governors
+	- [x] Intellidemand
+	- [x] DanceDance (unz unz unz unz)
 	- [ ] More soon...
-- [ ] Thermal control
+- [x] Thermal control
 	- [x] Thermald
-	- [ ] Intellithermal
-	- [ ] Core control
-- [ ] Faux sound
-- [ ] IO Schedulers
-	- [ ] SIO
-	- [ ] VR
-	- [ ] ZEN
+	- [x] Intellithermal
+	- [x] Core control
+- [x] Faux sound
+- [x] IO Schedulers
+	- [x] SIO
+	- [x] VR
+	- [x] ZEN
 	- [ ] More soon...
 - [ ] Fast charge
 - [ ] Voltage and core frequency control
 - [ ] Double tap to sleep/wake, like G2 has.
 - [ ] Update to newer kernel-3.4 repos
 - [ ] Support for Lollipop (CM12.x) and later Android M
-- [ ] Additional tweaks and features -> feel free to ask.
+- [ ] Additional tweaks and features -> feel free to ask & request
