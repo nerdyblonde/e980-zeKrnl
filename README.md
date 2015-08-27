@@ -20,6 +20,7 @@ based ROMs will support it. I myself I'm using it on PAC 4.4.
 	- [x] Intelliactive
 	- [x] DanceDance
 	- [x] Wheatley
+	- [x] Lionheart
 - [x] Thermal control
 	- [x] Thermald
 	- [x] Intellithermal
