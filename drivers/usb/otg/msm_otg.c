@@ -51,7 +51,6 @@
 #include <mach/rpm-regulator.h>
 
 <<<<<<< HEAD
-<<<<<<< HEAD
 #ifdef CONFIG_LGE_PM
 #include <mach/restart.h>
 #include <linux/reboot.h>
@@ -71,15 +70,10 @@
 #endif /*CONFIG_LGE_AUX_NOISE*/
 
 =======
-=======
->>>>>>> 18eb498... fastcharge: initial adaptation for Nexus 4
 #ifdef CONFIG_FORCE_FAST_CHARGE
 #include <linux/fastchg.h>
 #endif
 
-<<<<<<< HEAD
->>>>>>> 18eb498... fastcharge: initial adaptation for Nexus 4
-=======
 >>>>>>> 18eb498... fastcharge: initial adaptation for Nexus 4
 #define MSM_USB_BASE	(motg->regs)
 #define DRIVER_NAME	"msm_otg"
