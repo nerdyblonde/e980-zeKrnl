@@ -46,16 +46,16 @@
 #include <linux/earlysuspend.h>
 
 /******************** Missing stuff making me angry ********************/
-static unsigned int CONFIG_SMARTASSV2_SLEEP_IDEAL_FREQ=384000
-static unsigned int CONFIG_SMARTASSV2_AWAKE_IDEAL_FREQ=486000
-static unsigned int CONFIG_SMARTASSV2_RAMP_UP_STEP=256000
-static unsigned int CONFIG_SMARTASSV2_RAMP_DOWN_STEP=256000
-static unsigned int CONFIG_SMARTASSV2_MAX_CPU_LOAD=50
-static unsigned int CONFIG_SMARTASSV2_MIN_CPU_LOAD=25
-static unsigned int CONFIG_SMARTASSV2_UP_RATE_US=48000
-static unsigned int CONFIG_SMARTASSV2_DOWN_RATE_US=99000
-static unsigned int CONFIG_SMARTASSV2_SLEEP_WAKEUP_FREQ=99999999
-static unsigned int CONFIG_SMARTASSV2_SAMPLE_RATE_JIFFIES=2
+static unsigned int CONFIG_SMARTASSV2_SLEEP_IDEAL_FREQ=384000;
+static unsigned int CONFIG_SMARTASSV2_AWAKE_IDEAL_FREQ=486000;
+static unsigned int CONFIG_SMARTASSV2_RAMP_UP_STEP=256000;
+static unsigned int CONFIG_SMARTASSV2_RAMP_DOWN_STEP=256000;
+static unsigned int CONFIG_SMARTASSV2_MAX_CPU_LOAD=50;
+static unsigned int CONFIG_SMARTASSV2_MIN_CPU_LOAD=25;
+static unsigned int CONFIG_SMARTASSV2_UP_RATE_US=48000;
+static unsigned int CONFIG_SMARTASSV2_DOWN_RATE_US=99000;
+static unsigned int CONFIG_SMARTASSV2_SLEEP_WAKEUP_FREQ=99999999;
+static unsigned int CONFIG_SMARTASSV2_SAMPLE_RATE_JIFFIES=2;
 
 /******************** Tunable parameters: ********************/
 
