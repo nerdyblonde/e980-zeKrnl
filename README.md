@@ -17,20 +17,33 @@ based ROMs will support it. I myself I'm using it on PAC 4.4.
 
 - [x] CPU Governors
 	- [x] Intellidemand
-	- [x] DanceDance (unz unz unz unz)
-	- [ ] More soon...
+	- [x] Intelliactive
+	- [x] DanceDance
 - [x] Thermal control
 	- [x] Thermald
 	- [x] Intellithermal
 	- [x] Core control
-- [x] Faux sound
 - [x] IO Schedulers
 	- [x] SIO
 	- [x] VR
 	- [x] ZEN
-	- [ ] More soon...
-- [ ] Fast charge
-- [ ] Voltage and core frequency control
+- [x] TCP Congestion Algorhitm
+	- [x] cubic
+	- [x] reno
+	- [x] westwood
+	- [x] highspeed
+	- [x] hybla
+	- [x] htcp
+	- [x] vegas
+	- [x] veno
+	- [x] scalable
+	- [x] lp
+	- [x] yeah
+	- [x] illinois
+- [x] Faux sound
+- [x] Fast charge
+- [x] exFAT support
+- [ ] Voltage and core frequency (underclock & overclock) control
 - [ ] Double tap to sleep/wake, like G2 has.
 - [ ] Update to newer kernel-3.4 repos
 - [ ] Support for Lollipop (CM12.x) and later Android M
