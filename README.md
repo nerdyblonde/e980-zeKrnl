@@ -19,6 +19,7 @@ based ROMs will support it. I myself I'm using it on PAC 4.4.
 	- [x] Intellidemand
 	- [x] Intelliactive
 	- [x] DanceDance
+	- [x] Wheatley
 - [x] Thermal control
 	- [x] Thermald
 	- [x] Intellithermal
@@ -44,7 +45,7 @@ based ROMs will support it. I myself I'm using it on PAC 4.4.
 - [x] Fast charge
 - [x] exFAT support
 - [ ] Voltage and core frequency (underclock & overclock) control
-- [ ] Double tap to sleep/wake, like G2 has.
+- [ ] Double tap to sleep/wake [IN PROGRESS]
 - [ ] Update to newer kernel-3.4 repos
 - [ ] Support for Lollipop (CM12.x) and later Android M
 - [ ] Additional tweaks and features -> feel free to ask & request
