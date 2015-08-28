@@ -81,6 +81,7 @@ config CPU_FREQ_DEFAULT_GOV_WHEATLEY
 	select CPU_FREQ_GOV_PERFORMANCE
 	help
 	  Use the CPUFreq governor 'wheatley' as default.
+	  
 config CPU_FREQ_DEFAULT_GOV_USERSPACE
 	bool "userspace"
 	select CPU_FREQ_GOV_USERSPACE
@@ -171,6 +172,10 @@ config CPU_FREQ_GOV_LIONHEART
 
 	  If in doubt, say N.
 
+config CPU_FREQ_GOV_WHEATLEY
+	tristate "'wheatley' cpufreq governor"
+	depends on CPU_FREQ
+	
 config CPU_FREQ_GOV_PERFORMANCE
 	tristate "'performance' governor"
 	help
@@ -331,14 +336,12 @@ config CPU_FREQ_GOV_INTELLIACTIVE
 config CPU_FREQ_GOV_SMARTASSV2
 	tristate "'smartassV2' cpufreq governor"
  	depends on CPU_FREQ
-	default n
  	help
 		'smartassV2' - a "smart" governor
 		If in doubt, say N.
 		
 config CPU_FREQ_GOV_ADAPTIVE
 	tristate "'adaptive' cpufreq policy governor"
-	default n
 	help
 	  'adaptive' - This driver adds a dynamic cpufreq policy governor
 	  designed for latency-sensitive workloads and also for demanding
