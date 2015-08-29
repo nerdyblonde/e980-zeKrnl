@@ -1200,10 +1200,6 @@ static int touch_ic_init(struct lge_touch_data *ts)
 
 		if(unlikely(ts->int_pin_state != 1 && next_work <= 0)){
 			TOUCH_INFO_MSG("WARN: Interrupt pin is low - next_work: %d, try_count: %d]\n",
-
-		if (unlikely(int_pin != 1 && next_work <= 0)) {
-			TOUCH_INFO_MSG("WARN: (init)Interrupt pin is low"
-					" - next_work: %d, try_count: %d]\n",
 					next_work, ts->ic_init_err_cnt);
 			goto err_out_retry;
 		}
@@ -2439,15 +2435,7 @@ static void touch_work_func_c(struct work_struct *work)
 		touch_asb_input_report(ts, FINGER_PRESSED);
 		report_enable = 1;
 
-
 		memcpy(ts->ts_data.prev_data, ts->ts_data.curr_data, sizeof(ts->ts_data.curr_data));
-
-		if (unlikely(int_pin != 1 && next_work <= 0)) {
-			TOUCH_INFO_MSG("WARN: (work)Interrupt pin is low - "
-					"next_work: %d, try_count: %d]\n",
-					next_work, ts->work_sync_err_cnt);
-			goto err_out_retry;
-		}
 	}
 
 	/* Reset finger position data */
@@ -3695,9 +3683,9 @@ static struct sys_device lge_touch_sys_device = {
 	.cls	= &lge_touch_sys_class,
 };
 
-
+<<<<<<< HEAD
 static int touch_probe(struct i2c_client *client, const struct i2c_device_id *id)
-
+=======
 #ifdef CONFIG_TOUCHSCREEN_CHARGER_NOTIFY
 static void touch_external_power_changed(struct power_supply *psy)
 {
@@ -3841,6 +3829,7 @@ static void lge_touch_sysfs_deinit(void)
 
 static int touch_probe(struct i2c_client *client,
 				const struct i2c_device_id *id)
+>>>>>>> d15de9c... drivers/touchscreen: add lge_touch android_touch kobject to fix s2wi in one position across devices
 {
 	struct lge_touch_data *ts;
 	int ret = 0;
@@ -4087,8 +4076,11 @@ static int touch_probe(struct i2c_client *client,
 	register_early_suspend(&ts->early_suspend);
 #endif
 
+<<<<<<< HEAD
         atomic_set(&ts->keypad_enable, 1);
+=======
         lge_touch_sysfs_init();
+>>>>>>> d15de9c... drivers/touchscreen: add lge_touch android_touch kobject to fix s2wi in one position across devices
 
 	/* Register sysfs for making fixed communication path to framework layer */
 	ret = sysdev_class_register(&lge_touch_sys_class);
@@ -4172,9 +4164,11 @@ static int touch_remove(struct i2c_client *client)
 
 	unregister_early_suspend(&ts->early_suspend);
 
-
+<<<<<<< HEAD
 	if (ts->pdata->role->operation_mode)
+=======
         lge_touch_sysfs_deinit();
+>>>>>>> d15de9c... drivers/touchscreen: add lge_touch android_touch kobject to fix s2wi in one position across devices
 
 	pm_runtime_set_suspended(&client->dev);
 	pm_runtime_disable(&client->dev);
@@ -4337,13 +4331,13 @@ static void touch_late_resume(struct early_suspend *h)
 			next_work = atomic_read(&ts->next_work);
 
 			if (unlikely(int_pin != 1 && next_work <= 0)) {
-				TOUCH_INFO_MSG("WARN: (s2w)Interrupt pin is low"
+				TOUCH_INFO_MSG("WARN: Interrupt pin is low"
 						" - next_work: %d, try_count: %d]\n",
 						next_work, ts->ic_init_err_cnt);
-				pr_warn("touch core: (s2w)force safety reset!\n");
+				ts->ic_init_err_cnt++;
 				safety_reset(ts);
-				pr_warn("touch core: (s2w)force IC init!\n");
-				touch_ic_init(ts);
+				queue_delayed_work(touch_wq,
+					&ts->work_init, msecs_to_jiffies(10));
 			}
 		}
 	}
