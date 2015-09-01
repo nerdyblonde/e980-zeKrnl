@@ -8531,7 +8531,7 @@ struct snd_kcontrol_new *gpl_faux_snd_controls_ptr =
 	(struct snd_kcontrol_new *)tabla_snd_controls;
 struct snd_soc_codec *fauxsound_codec_ptr;
 EXPORT_SYMBOL(fauxsound_codec_ptr);
-int wcd9xxx_hw_revision;
+int wcd9xxx_hw_revision = 0;
 EXPORT_SYMBOL(wcd9xxx_hw_revision);
 #endif
 
