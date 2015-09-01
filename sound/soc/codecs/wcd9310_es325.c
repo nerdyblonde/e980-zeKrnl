@@ -8531,7 +8531,7 @@ struct snd_kcontrol_new *gpl_faux_snd_controls_ptr =
 	(struct snd_kcontrol_new *)tabla_snd_controls;
 struct snd_soc_codec *fauxsound_codec_ptr;
 EXPORT_SYMBOL(fauxsound_codec_ptr);
-int wcd9xxx_hw_revision = 0;
+static int wcd9xxx_hw_revision = 0;
 EXPORT_SYMBOL(wcd9xxx_hw_revision);
 #endif
 
@@ -8558,6 +8558,7 @@ static int tabla_codec_probe(struct snd_soc_codec *codec)
 	else
 		wcd9xxx_hw_revision = 2;
 #endif
+
 	tabla = kzalloc(sizeof(struct tabla_priv), GFP_KERNEL);
 	if (!tabla) {
 		dev_err(codec->dev, "Failed to allocate private data\n");
