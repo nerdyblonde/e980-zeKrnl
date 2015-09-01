@@ -3726,9 +3726,6 @@ int tabla_write(struct snd_soc_codec *codec, unsigned int reg,
 EXPORT_SYMBOL(tabla_write)
 #endif
 
-#ifndef CONFIG_SOUND_CONTROL_HAX_GPL
-static
-#endif
 unsigned int tabla_read(struct snd_soc_codec *codec, 
 				unsigned int reg)
 {
@@ -8531,7 +8528,7 @@ struct snd_kcontrol_new *gpl_faux_snd_controls_ptr =
 	(struct snd_kcontrol_new *)tabla_snd_controls;
 struct snd_soc_codec *fauxsound_codec_ptr;
 EXPORT_SYMBOL(fauxsound_codec_ptr);
-static int wcd9xxx_hw_revision = 0;
+int wcd9xxx_hw_revision;
 EXPORT_SYMBOL(wcd9xxx_hw_revision);
 #endif
 
