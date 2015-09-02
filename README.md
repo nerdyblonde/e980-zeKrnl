@@ -13,9 +13,11 @@ was proven that F240x is different for more than modem.
 Currenlty supported Android version is 4.4, which mean all CM11.0 
 based ROMs will support it. I myself I'm using it on PAC 4.4.
 
-This is STABLE branch; Other branches (s2w_dt2s & 3.4.108_experimental) are highly experimental and in testing, so if you build stuff from them, expect that it WILL be broken.
+This is STABLE branch; Other branches are highly experimental and in testing, so if you build stuff from them, expect that it WILL be broken.
 
 ## Progress
+
+Current version is **v1.3**.
 
 - [x] CPU Governors
 	- [x] Intellidemand
@@ -48,7 +50,7 @@ This is STABLE branch; Other branches (s2w_dt2s & 3.4.108_experimental) are high
 	- [x] illinois
 - [x] Faux sound
 - [x] Fast charge
-- [x] exFAT support
+- [x] exFAT support [in code, not enabled by default]
 - [ ] Voltage and core frequency (underclock & overclock) control
 - [x] Double tap to wake
 - [x] Sweep2Wake & Sweep2Sleep
