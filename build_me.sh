@@ -74,6 +74,7 @@ device_arch="arm"
 
 ## It's fun time! Don't edit this if you really don't have a need for that.
 
+# Function to generate boot image and flashable zip
 function generate_bootImg {
 	# Check if abootimg binary exist
 	echo "-> Starting boot.img generation"
@@ -201,7 +202,7 @@ function generate_bootImg {
 		
 	fi
 }
-
+# Function to start build
 function start_build {
 	local mess=0
 	
@@ -343,12 +344,14 @@ function start_build {
 		exit;;
 	fi
 }
-
+## Function to check does python venv exist
 function createVenv {
 	pyvenv --system-site-packages --copies "$venv_path"
 }
 
-### Check if you're running Arch
+########## FUNTIME ###############
+
+## Check if you're running Arch
 echo "-> Checking if running on Arch Linux..."
 
 distro=`cat /etc/os-release | grep ID |  cut -d'=' -f 2`
