@@ -56,6 +56,18 @@ jobs=1
 # Name of example boot.img to use for boot.img regeneration
 template_bootimg="boot-pac-kk.img"
 
+# Kernel name
+KERNEL_NAME="zeKernel"
+
+# Kernel version appendix
+KERNEL_VERSION="-kk-dev"
+
+# Build timestamp
+TIMESTAMP=$(date +"%d%m%Y-%H%m%S")
+
+# Build number prefix
+BUILD_NUM_PREFIX="_#"
+
 # And finaly, information about architecture you're building for. 
 # OFC, if you're using this for OGPro, you gonna need arm...
 device_arch="arm"
@@ -134,6 +146,11 @@ function start_build {
 	if [ ! -e "$PWD/.config" ]; then
 		echo "++ Kernel configuration not found. Creating new..."
 		make $defconfig_name;
+		if [ -e ".build_no" ]; then
+			rm -rvf ".build_no"
+		else
+			echo "1" >> ".build_no"
+		fi		
 		
 		# Check if configuration is actually made
 		if [ -e "$PWD/.config" ]; then
@@ -158,6 +175,13 @@ function start_build {
 					echo "+++ Writing new .config file...";
 					make $defconfig_name;
 					
+					# Set build_num variable
+					if [ -e ".build_no" ]; then
+						rm -rvf ".build_no"
+					else
+						echo "1" >> ".build_no"
+					fi	
+					
 					# Check if configuration is actually made
 					if [ -f "$PWD/.config" ]; then
 						echo "++++ New configuration created"
@@ -170,6 +194,17 @@ function start_build {
 					echo "+++ Configuration will be reused"
 					echo " "
 					$mess=1
+					
+					# Set build_num variable
+					if [ -e ".build_no" ]; then
+						old_build_num=`cat .build_no`
+						new_build_num=$((old_build_num+1))
+						rm -r ".build_no"
+						echo "$new_build_num" >> ".build_no"
+					else
+						echo "1" >> ".build_no"
+					fi	
+					
 					break;;
 			esac
 		done
@@ -264,6 +299,7 @@ function generate_bootImg {
 	fi
 	
 	# Generate new boot.img
+	bootImgState=1
 	echo "+ Starting generation of new boot.img"
 	echo " "
 	echo "++ Copying zImage from arch/$ARCH/boot..."
@@ -272,16 +308,81 @@ function generate_bootImg {
 	abootimg --create boot.img -f template_img/bootimg.cfg -k zImage -r template_img/initrd.img
 	if [ -e "$PWD/build_tools/boot.img"	]; then
 		echo "+++ Success, boot.img generated"
-		echo "++ Cleaning up..."
-		rm -rvf "template_img/bootimg.cfg"
-		rm -rvf "template_img/initrd.img"
-		rm -rvf "template_img/zImage"
 	else
-		echo "+++ Failure, boot.img not generated, aborting"
+		echo "+++ Failure, boot.img not generated"
+		bootImgState=0
 	fi
+	echo "++ Cleaning up..."
+	rm -rvf "template_img/bootimg.cfg"
+	rm -rvf "template_img/initrd.img"
+	rm -rvf "template_img/zImage"
 	
-	# Generate flashable zip.
-	# TODO
+	# Generate flashable zip if boot image is created
+	echo " "
+	if [$bootImgState==1 ]; then
+		echo "+ Generating flashable zip"
+		# Create tmp directory if doesn't exist
+		if [ -d "build_tools/tmp"]; then
+			mkdir "build_tools/tmp"
+		fi
+		
+		# Create out directory if it doesn't exist
+		if [ -d "build_tools/out"]; then
+			mkdir "build_tools/out"
+		fi
+		
+		# Copy needed files to tmp dir
+		cp -rvf "build_tools/zip_file" "build_tools/tmp/"
+		cp -rvf "build_tools/boot.img" "build_tools/tmp/zip_file/"
+		
+		# Check if there modules directory tmp zip_file
+		if [ -d "build_tools/tmp/zip_file/system/lib/modules" ];
+			mkdir -p "build_tools/tmp/zip_file/system/lib/modules"
+		fi
+		
+		# Copy modules
+		echo "++ Copying modules"
+		cp -rvf "drivers/crypto/msm/qce40.ko" "build_tools/tmp/zip_file/system/lib/modules"
+		cp -rvf "drivers/crypto/msm/qcedev.ko" "build_tools/tmp/zip_file/system/lib/modules"
+		cp -rvf "drivers/crypto/msm/qcrypto.ko" "build_tools/tmp/zip_file/system/lib/modules"
+		cp -rvf "drivers/scsi/scsi_wait_scan.ko" "build_tools/tmp/zip_file/system/lib/modules"
+		
+		
+		# Generate updater-script and copy
+		# TODO updater-script generation
+		cp -rvf "build_tools/updater-script" "build_tools/tmp/zip_file/META-INF/com/google/android/"
+		
+		# Generate ZIP
+		work_dir=$PWD
+		echo "++ Changing working dir to tmp/zip_file"
+		cd "build_tools/tmp/zip_file"
+		echo "++ Creating zip file..."
+		zip flashable.zip -r *
+		echo "++ Returning back to work dir"
+		cd $work_dir
+		
+		# Copy zip file to build_tools/out
+		echo "++ Copying flashable zip from tmp to build_tools/out"
+		cp -rvf "$PWD/build_tools/tmp/zip_file/flashable.zip" "$PWD/build_tools/out"
+		
+		# Get build num
+		build_num=`cat .build_no`
+		BUILD_NUM="$BUILD_NUM_PREFIX$build_num"
+		
+		
+		# Renaming zip file
+		ZIP_FILE_NAME="$KERNEL_NAME$KERNEL_VERSION-$TIMESTAMP$BUILD_NUM.zip"
+		ZIP_FILE_NAME_SIGNED="$KERNEL_NAME$KERNEL_VERSION-$TIMESTAMP$BUILD_NUM-SIGNED.zip"
+		echo "++ Renaming zip file to $ZIP_FILE_NAME"
+		mv "$PWD/build_tools/out/flashable.zip" "$PWD/build_tools/out/$ZIP_FILE_NAME"
+		echo " "
+		
+		# Sign zip file
+		echo "++ Signing zip file"
+		java -jar "build_tools/tools/SignApk/signapk.jar" "build_tools/tools/SignApk/testkey.x509.pem" "build_tools/tools/SignApk/testkey.pk8" "build_tools/out/$ZIP_FILE_NAME" "build_tools/out/$ZIP_FILE_NAME_SIGNED"
+		echo "++ Done, enjoy."	
+		
+	fi
 }
 
 
