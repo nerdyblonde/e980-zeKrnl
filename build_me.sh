@@ -128,12 +128,13 @@ function generate_bootImg {
 	if [$bootImgState==1 ]; then
 		echo "+ Generating flashable zip"
 		# Create tmp directory if doesn't exist
-		if [ -d "build_tools/tmp"]; then
+		if [ -d "build_tools/tmp" ]; then
+		if [ -d "build_tools/tmp" ]; then
 			mkdir "build_tools/tmp"
 		fi
 		
 		# Create out directory if it doesn't exist
-		if [ -d "build_tools/out"]; then
+		if [ -d "build_tools/out" ]; then
 			mkdir "build_tools/out"
 		fi
 		
@@ -142,7 +143,7 @@ function generate_bootImg {
 		cp -rvf "build_tools/boot.img" "build_tools/tmp/zip_file/"
 		
 		# Check if there modules directory tmp zip_file
-		if [ -d "build_tools/tmp/zip_file/system/lib/modules" ];
+		if [ -d "build_tools/tmp/zip_file/system/lib/modules" ]; then
 			mkdir -p "build_tools/tmp/zip_file/system/lib/modules"
 		fi
 		
