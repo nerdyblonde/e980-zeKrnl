@@ -272,6 +272,10 @@ function generate_bootImg {
 	abootimg --create boot.img -f template_img/bootimg.cfg -k zImage -r template_img/initrd.img
 	if [ -e "$PWD/build_tools/boot.img"	]; then
 		echo "+++ Success, boot.img generated"
+		echo "++ Cleaning up..."
+		rm -rvf "template_img/bootimg.cfg"
+		rm -rvf "template_img/initrd.img"
+		rm -rvf "template_img/zImage"
 	else
 		echo "+++ Failure, boot.img not generated, aborting"
 	fi
