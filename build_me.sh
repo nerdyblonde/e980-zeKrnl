@@ -118,6 +118,8 @@ function generate_bootImg {
 		echo "+++ Failure, boot.img not generated"
 		bootImgState=0
 	fi
+	
+	# Cleanup
 	echo "++ Cleaning up..."
 	rm -rvf "template_img/bootimg.cfg"
 	rm -rvf "template_img/initrd.img"
@@ -128,7 +130,6 @@ function generate_bootImg {
 	if [$bootImgState==1 ]; then
 		echo "+ Generating flashable zip"
 		# Create tmp directory if doesn't exist
-		if [ -d "build_tools/tmp" ]; then
 		if [ -d "build_tools/tmp" ]; then
 			mkdir "build_tools/tmp"
 		fi
@@ -173,7 +174,7 @@ function generate_bootImg {
 		cp -rvf "$PWD/build_tools/tmp/zip_file/flashable.zip" "$PWD/build_tools/out"
 		
 		# Get build num
-		build_num=`cat .build_no`
+		build_num=$(cat .build_no)
 		BUILD_NUM="$BUILD_NUM_PREFIX$build_num"
 		
 		
@@ -199,10 +200,10 @@ function generate_bootImg {
 		echo "++ Your flashable zip can be found in $PWD/build_tools/out"
 		echo "++ Unsigned flashable zip: $ZIP_FILE_NAME"
 		echo "++ Signed flashable zip: $ZIP_FILE_NAME_SIGNED"
-		
-		
+
 	fi
 }
+
 # Function to start build
 function start_build {
 	local mess=0
@@ -333,7 +334,7 @@ function start_build {
 					generate_bootImg
 					echo " "
 					echo "+++++++++++++++ FINISHED +++++++++++++++++"
-					break
+					break;;
 				n )
 					echo "+++++++++++++++ FINISHED +++++++++++++++++"
 					exit;;
@@ -342,7 +343,7 @@ function start_build {
 	else
 		echo " "
 		echo "+ Build failed; check output for errors and try again after fixing them"
-		exit;;
+		exit
 	fi
 }
 ## Function to check does python venv exist
