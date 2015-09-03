@@ -136,6 +136,20 @@ struct cpufreq_governor cpufreq_gov_ondemandplus = {
         .max_transition_latency = 10000000,
         .owner = THIS_MODULE,
 };
+static inline cputime64_t get_cpu_idle_time(unsigned int cpu,
+					    cputime64_t *wall)
+{
+	u64 idle_time = get_cpu_idle_time_us(cpu, wall);
+
+	if (idle_time == -1ULL)
+		idle_time = get_cpu_idle_time_jiffy(cpu, wall);	
+	else if (io_is_busy == 2)
+		idle_time += (get_cpu_iowait_time_us(cpu, wall) / 2);
+	else if (!io_is_busy)
+		idle_time += get_cpu_iowait_time_us(cpu, wall);
+
+	return idle_time;
+}
 
 static void cpufreq_ondemandplus_timer(unsigned long data)
 {
