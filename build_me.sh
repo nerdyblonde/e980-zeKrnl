@@ -288,7 +288,7 @@ function start_build {
 		done
 	fi
 	
-	if [ $mess==1 ]; then
+	if [ $((mess == 1)) ]; then
 		echo "+ Your build folder is 'dirty', do you want to clean it?"
 		select ans in "y" "n"; do
 			case $ans in
@@ -296,14 +296,15 @@ function start_build {
 					echo "++ Cleaning build dir..."
 					echo " "
 					make clean
-					$mess=0
+					$(mess=0)
 					break;;
 				n ) 
 					break;;
 			esac
 		done
 	fi
-			
+	
+	echo " "		
 	# Check for any last minute changes
 	echo "+ Everything looks steady and ready. Do you want to make some final changes to the config?"
 	select yn in "y" "n"; do
@@ -325,7 +326,7 @@ function start_build {
 	make -j$jobs;
 	
 	# Check if build was a success and if yes, ask user for boot.img generation
-	if [ -e $PWD/arch/arm/zImage ]; then
+	if [ -e "$PWD/$ARCH/arm/boot/zImage" ]; then
 		echo " "
 		echo "+ Build successful. Do you want to generate boot img?"
 		select bla in "y" "n"; do
