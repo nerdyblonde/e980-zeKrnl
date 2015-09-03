@@ -51,7 +51,7 @@ defconfig_name="cyanogenmod_e980_defconfig"
 
 # Set number of threads/cores. If you have 4 cores, set it to 4+1=5.
 # General rule: n cores => value is n+1. Set it to 1 if you want to watch line by line and hunt for errors
-jobs=1
+jobs=2
 
 # Name of example boot.img to use for boot.img regeneration
 template_bootimg="boot-pac-kk.img"
@@ -81,7 +81,8 @@ function generate_bootImg {
 	echo " "
 	
 	echo "+ Checking if abootimg is in PATH.."
-	if [ hash abootimg 2>/dev/null ]; then
+	abootimg_pwd=$(which abootimg)
+	if [ -e "$abootimg_pwd" ]; then
 		echo "++ abootimg found."
 	else
 		echo "++ abootimg binary not found; aborting"
@@ -93,10 +94,10 @@ function generate_bootImg {
 	echo "+ Checking if template boot.img exists..."
 	if [ -e "$PWD/build_tools/template_img/$template_bootimg" ]; then
 		echo "++ Template boot.img found, extracting"
-		abootimg -x "template_img/$template_bootimg"
-		mv bootimg.cfg "template_img/"
-		mv initrd.img "template_img/"
-		mv zImage "template_img/"
+		abootimg -x "build_tools/template_img/$template_bootimg"
+		mv bootimg.cfg "build_tools/template_img/"
+		mv initrd.img "build_tools/template_img/"
+		mv zImage "build_tools/template_img/"
 		echo " "
 		echo "++ Template extracted"
 	else
@@ -109,9 +110,9 @@ function generate_bootImg {
 	echo "+ Starting generation of new boot.img"
 	echo " "
 	echo "++ Copying zImage from arch/$ARCH/boot..."
-	cp -rvf "arch/$ARCH/boot/zImage"
+	cp -rvf "arch/$ARCH/boot/zImage" "build_tools/"
 	echo "++ Generating boot.img"
-	abootimg --create boot.img -f template_img/bootimg.cfg -k zImage -r template_img/initrd.img
+	abootimg --create "$PWD/build_tools/boot.img" -f "$PWD/build_tools/template_img/bootimg.cfg" -k "$PWD/build_tools/zImage" -r "$PWD/build_tools/template_img/initrd.img"
 	if [ -e "$PWD/build_tools/boot.img"	]; then
 		echo "+++ Success, boot.img generated"
 	else
@@ -127,20 +128,20 @@ function generate_bootImg {
 	
 	# Generate flashable zip if boot image is created
 	echo " "
-	if [$bootImgState==1 ]; then
+	if [ $bootImgState == 1 ]; then
 		echo "+ Generating flashable zip"
 		# Create tmp directory if doesn't exist
-		if [ -d "build_tools/tmp" ]; then
+		if [ ! -d "build_tools/tmp" ]; then
 			mkdir "build_tools/tmp"
 		fi
 		
 		# Create out directory if it doesn't exist
-		if [ -d "build_tools/out" ]; then
+		if [ ! -d "build_tools/out" ]; then
 			mkdir "build_tools/out"
 		fi
 		
 		# Copy needed files to tmp dir
-		cp -rvf "build_tools/zip_file" "build_tools/tmp/"
+		cp -rvf "build_tools/zip_file/" "build_tools/tmp/zip_file/"
 		cp -rvf "build_tools/boot.img" "build_tools/tmp/zip_file/"
 		
 		# Check if there modules directory tmp zip_file
@@ -155,23 +156,26 @@ function generate_bootImg {
 		cp -rvf "drivers/crypto/msm/qcrypto.ko" "build_tools/tmp/zip_file/system/lib/modules"
 		cp -rvf "drivers/scsi/scsi_wait_scan.ko" "build_tools/tmp/zip_file/system/lib/modules"
 		
+		echo " "
 		
 		# Generate updater-script and copy
+		echo "++ Generating updater-script"
 		# TODO updater-script generation
 		cp -rvf "build_tools/updater-script" "build_tools/tmp/zip_file/META-INF/com/google/android/"
+		echo " "
 		
 		# Generate ZIP
 		work_dir=$PWD
 		echo "++ Changing working dir to tmp/zip_file"
-		cd "build_tools/tmp/zip_file"
+		cd "build_tools/tmp/zip_file/"
 		echo "++ Creating zip file..."
-		zip flashable.zip -r *
+		zip flashable.zip -r .
 		echo "++ Returning back to work dir"
 		cd $work_dir
 		
 		# Copy zip file to build_tools/out
 		echo "++ Copying flashable zip from tmp to build_tools/out"
-		cp -rvf "$PWD/build_tools/tmp/zip_file/flashable.zip" "$PWD/build_tools/out"
+		cp -rvf "$PWD/build_tools/tmp/zip_file/flashable.zip" "$PWD/build_tools/out/flashable.zip"
 		
 		# Get build num
 		build_num=$(cat .build_no)
@@ -206,7 +210,7 @@ function generate_bootImg {
 
 # Function to start build
 function start_build {
-	local mess=0
+	mess=0
 	
 	echo "-> Starting build..."
 	echo " "
@@ -226,6 +230,7 @@ function start_build {
 		make $defconfig_name;
 		if [ -e ".build_no" ]; then
 			rm -rvf ".build_no"
+			echo "1" >> ".build_no"
 		else
 			echo "1" >> ".build_no"
 		fi		
@@ -256,6 +261,7 @@ function start_build {
 					# Set build_num variable
 					if [ -e ".build_no" ]; then
 						rm -rvf ".build_no"
+						echo "1" >> ".build_no"
 					else
 						echo "1" >> ".build_no"
 					fi	
@@ -271,7 +277,7 @@ function start_build {
 				Reuse )
 					echo "+++ Configuration will be reused"
 					echo " "
-					$(mess=1)
+					mess=1
 					
 					# Set build_num variable
 					if [ -e ".build_no" ]; then
@@ -288,7 +294,7 @@ function start_build {
 		done
 	fi
 	
-	if [ $((mess == 1)) ]; then
+	if [ $mess == 1 ]; then
 		echo "+ Your build folder is 'dirty', do you want to clean it?"
 		select ans in "y" "n"; do
 			case $ans in
@@ -322,11 +328,13 @@ function start_build {
 	done
 	echo "+ Press any key to start."
 	read blah
+	echo " "
+	echo "++ Starting build #$(cat .build_no)"
 	echo " "				
 	make -j$jobs;
 	
 	# Check if build was a success and if yes, ask user for boot.img generation
-	if [ -e "$PWD/$ARCH/arm/boot/zImage" ]; then
+	if [ -e "$PWD/arch/$ARCH/boot/zImage" ]; then
 		echo " "
 		echo "+ Build successful. Do you want to generate boot img?"
 		select bla in "y" "n"; do
@@ -366,7 +374,8 @@ if [ "$distro" == "arch" ]; then
 		source "$venv_path/bin/activate"
 	else
 		echo "++ python27 virtual env. not found, checking if installer is present..."
-		if [ hash pyvenv 2>/dev/null ]; then
+		pyvenv_path=$(which pyvenv)
+		if [ -e "$pyvenv_path" ]; then
 			echo "+++ pyvenv available, installing..."
 			createVenv
 		else
@@ -402,5 +411,3 @@ echo "+ Using $jobs threads"
 echo " "
 
 start_build;
-
-

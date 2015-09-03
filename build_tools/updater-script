@@ -21,7 +21,7 @@ assert(package_extract_dir("system", "/system"));
 set_perm_recursive(0, 0, 0755, 0644, "/system/lib/modules");
 ui_print("-- Lokifying and installing kernel");
 package_extract_file("boot.img", "/tmp/boot.img");
-assert(run_program("/tmp/loki/loki.sh") == 0);
+assert(run_program("/tmp/loki.sh") == 0);
 show_progress(0.250000, 0);
 unmount("/system");
 ui_print("-- Finished. Enjoy.");
