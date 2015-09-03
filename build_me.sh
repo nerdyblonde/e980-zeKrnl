@@ -74,58 +74,133 @@ device_arch="arm"
 
 ## It's fun time! Don't edit this if you really don't have a need for that.
 
-function createVenv {
-	pyvenv --system-site-packages --copies "$venv_path"
-}
-
-### Check if you're running Arch
-echo "-> Checking if running on Arch Linux..."
-
-distro=`cat /etc/os-release | grep ID |  cut -d'=' -f 2`
-
-if [ "$distro" == "arch" ]; then
-	echo "+ Running on Arch Linux"
-	if [ -d "$venv_path" ]; then
-		echo "++ python27 virtual env. installed in $venv_path, activating"
-		source "$venv_path/bin/activate"
+function generate_bootImg {
+	# Check if abootimg binary exist
+	echo "-> Starting boot.img generation"
+	echo " "
+	
+	echo "+ Checking if abootimg is in PATH.."
+	if [ hash abootimg 2>/dev/null ]; then
+		echo "++ abootimg found."
 	else
-		echo "++ python27 virtual env. not found, checking if installer is present..."
-		if [ hash pyvenv 2>/dev/null ]; then
-			echo "+++ pyvenv available, installing..."
-			createVenv
-		else
-			echo "+++ pyvenv binary not found, aborting..."
-			exit
-		fi
+		echo "++ abootimg binary not found; aborting"
+		exit
 	fi
-fi
-
-echo " "
-
-### Check for toolchains
-echo "-> Checking if toolchain is installed..."
-
-toolchain_path="$toolchains_dir/$toolchain_name/bin/arm-cortex_a15-linux-gnueabihf-"
-if [ -d "$toolchains_dir/$toolchain_name/bin/" ]; then
-	echo "+ Toolchain path set to $toolchain_path"
-else
-	echo "+ Toolchain not found on $toolchain_path, aborting..."
-	exit
-fi
-
-### We're alive, let's create needed variables
-echo " "
-echo "-> Setting variables:"
-export CROSS_COMPILE=$toolchain_path
-echo "+ CROSS_COMPILE=$CROSS_COMPILE"
-export ARCH=$device_arch
-echo "+ ARCH=$ARCH"
-echo "+ building config $defconfig_name"
-echo "+ Using $jobs threads"
-
-echo " "
-
-start_build;
+	
+	# Check if there is existing, example boot.img to use as template
+	echo " "
+	echo "+ Checking if template boot.img exists..."
+	if [ -e "$PWD/build_tools/template_img/$template_bootimg" ]; then
+		echo "++ Template boot.img found, extracting"
+		abootimg -x "template_img/$template_bootimg"
+		mv bootimg.cfg "template_img/"
+		mv initrd.img "template_img/"
+		mv zImage "template_img/"
+		echo " "
+		echo "++ Template extracted"
+	else
+		echo "++ Template boot.img not found, aborting."
+		exit
+	fi
+	
+	# Generate new boot.img
+	bootImgState=1
+	echo "+ Starting generation of new boot.img"
+	echo " "
+	echo "++ Copying zImage from arch/$ARCH/boot..."
+	cp -rvf "arch/$ARCH/boot/zImage"
+	echo "++ Generating boot.img"
+	abootimg --create boot.img -f template_img/bootimg.cfg -k zImage -r template_img/initrd.img
+	if [ -e "$PWD/build_tools/boot.img"	]; then
+		echo "+++ Success, boot.img generated"
+	else
+		echo "+++ Failure, boot.img not generated"
+		bootImgState=0
+	fi
+	echo "++ Cleaning up..."
+	rm -rvf "template_img/bootimg.cfg"
+	rm -rvf "template_img/initrd.img"
+	rm -rvf "template_img/zImage"
+	
+	# Generate flashable zip if boot image is created
+	echo " "
+	if [$bootImgState==1 ]; then
+		echo "+ Generating flashable zip"
+		# Create tmp directory if doesn't exist
+		if [ -d "build_tools/tmp"]; then
+			mkdir "build_tools/tmp"
+		fi
+		
+		# Create out directory if it doesn't exist
+		if [ -d "build_tools/out"]; then
+			mkdir "build_tools/out"
+		fi
+		
+		# Copy needed files to tmp dir
+		cp -rvf "build_tools/zip_file" "build_tools/tmp/"
+		cp -rvf "build_tools/boot.img" "build_tools/tmp/zip_file/"
+		
+		# Check if there modules directory tmp zip_file
+		if [ -d "build_tools/tmp/zip_file/system/lib/modules" ];
+			mkdir -p "build_tools/tmp/zip_file/system/lib/modules"
+		fi
+		
+		# Copy modules
+		echo "++ Copying modules"
+		cp -rvf "drivers/crypto/msm/qce40.ko" "build_tools/tmp/zip_file/system/lib/modules"
+		cp -rvf "drivers/crypto/msm/qcedev.ko" "build_tools/tmp/zip_file/system/lib/modules"
+		cp -rvf "drivers/crypto/msm/qcrypto.ko" "build_tools/tmp/zip_file/system/lib/modules"
+		cp -rvf "drivers/scsi/scsi_wait_scan.ko" "build_tools/tmp/zip_file/system/lib/modules"
+		
+		
+		# Generate updater-script and copy
+		# TODO updater-script generation
+		cp -rvf "build_tools/updater-script" "build_tools/tmp/zip_file/META-INF/com/google/android/"
+		
+		# Generate ZIP
+		work_dir=$PWD
+		echo "++ Changing working dir to tmp/zip_file"
+		cd "build_tools/tmp/zip_file"
+		echo "++ Creating zip file..."
+		zip flashable.zip -r *
+		echo "++ Returning back to work dir"
+		cd $work_dir
+		
+		# Copy zip file to build_tools/out
+		echo "++ Copying flashable zip from tmp to build_tools/out"
+		cp -rvf "$PWD/build_tools/tmp/zip_file/flashable.zip" "$PWD/build_tools/out"
+		
+		# Get build num
+		build_num=`cat .build_no`
+		BUILD_NUM="$BUILD_NUM_PREFIX$build_num"
+		
+		
+		# Renaming zip file
+		ZIP_FILE_NAME="$KERNEL_NAME$KERNEL_VERSION-$TIMESTAMP$BUILD_NUM.zip"
+		ZIP_FILE_NAME_SIGNED="$KERNEL_NAME$KERNEL_VERSION-$TIMESTAMP$BUILD_NUM-SIGNED.zip"
+		echo "++ Renaming zip file to $ZIP_FILE_NAME"
+		mv "$PWD/build_tools/out/flashable.zip" "$PWD/build_tools/out/$ZIP_FILE_NAME"
+		echo " "
+		
+		# Sign zip file
+		echo "++ Signing zip file"
+		java -jar "build_tools/tools/SignApk/signapk.jar" "build_tools/tools/SignApk/testkey.x509.pem" "build_tools/tools/SignApk/testkey.pk8" "build_tools/out/$ZIP_FILE_NAME" "build_tools/out/$ZIP_FILE_NAME_SIGNED"
+		echo "++ Done."	
+		
+		# Cleanup
+		echo " "
+		echo "++ Removing tmp directory"
+		rm -rvf "build_tools/tmp"
+		
+		# Inform
+		echo " "
+		echo "++ Your flashable zip can be found in $PWD/build_tools/out"
+		echo "++ Unsigned flashable zip: $ZIP_FILE_NAME"
+		echo "++ Signed flashable zip: $ZIP_FILE_NAME_SIGNED"
+		
+		
+	fi
+}
 
 function start_build {
 	local mess=0
@@ -269,132 +344,57 @@ function start_build {
 	fi
 }
 
-function generate_bootImg {
-	# Check if abootimg binary exist
-	echo "-> Starting boot.img generation"
-	echo " "
-	
-	echo "+ Checking if abootimg is in PATH.."
-	if [ hash abootimg 2>/dev/null ]; then
-		echo "++ abootimg found."
-	else
-		echo "++ abootimg binary not found; aborting"
-		exit
-	fi
-	
-	# Check if there is existing, example boot.img to use as template
-	echo " "
-	echo "+ Checking if template boot.img exists..."
-	if [ -e "$PWD/build_tools/template_img/$template_bootimg" ]; then
-		echo "++ Template boot.img found, extracting"
-		abootimg -x "template_img/$template_bootimg"
-		mv bootimg.cfg "template_img/"
-		mv initrd.img "template_img/"
-		mv zImage "template_img/"
-		echo " "
-		echo "++ Template extracted"
-	else
-		echo "++ Template boot.img not found, aborting."
-		exit
-	fi
-	
-	# Generate new boot.img
-	bootImgState=1
-	echo "+ Starting generation of new boot.img"
-	echo " "
-	echo "++ Copying zImage from arch/$ARCH/boot..."
-	cp -rvf "arch/$ARCH/boot/zImage"
-	echo "++ Generating boot.img"
-	abootimg --create boot.img -f template_img/bootimg.cfg -k zImage -r template_img/initrd.img
-	if [ -e "$PWD/build_tools/boot.img"	]; then
-		echo "+++ Success, boot.img generated"
-	else
-		echo "+++ Failure, boot.img not generated"
-		bootImgState=0
-	fi
-	echo "++ Cleaning up..."
-	rm -rvf "template_img/bootimg.cfg"
-	rm -rvf "template_img/initrd.img"
-	rm -rvf "template_img/zImage"
-	
-	# Generate flashable zip if boot image is created
-	echo " "
-	if [$bootImgState==1 ]; then
-		echo "+ Generating flashable zip"
-		# Create tmp directory if doesn't exist
-		if [ -d "build_tools/tmp"]; then
-			mkdir "build_tools/tmp"
-		fi
-		
-		# Create out directory if it doesn't exist
-		if [ -d "build_tools/out"]; then
-			mkdir "build_tools/out"
-		fi
-		
-		# Copy needed files to tmp dir
-		cp -rvf "build_tools/zip_file" "build_tools/tmp/"
-		cp -rvf "build_tools/boot.img" "build_tools/tmp/zip_file/"
-		
-		# Check if there modules directory tmp zip_file
-		if [ -d "build_tools/tmp/zip_file/system/lib/modules" ];
-			mkdir -p "build_tools/tmp/zip_file/system/lib/modules"
-		fi
-		
-		# Copy modules
-		echo "++ Copying modules"
-		cp -rvf "drivers/crypto/msm/qce40.ko" "build_tools/tmp/zip_file/system/lib/modules"
-		cp -rvf "drivers/crypto/msm/qcedev.ko" "build_tools/tmp/zip_file/system/lib/modules"
-		cp -rvf "drivers/crypto/msm/qcrypto.ko" "build_tools/tmp/zip_file/system/lib/modules"
-		cp -rvf "drivers/scsi/scsi_wait_scan.ko" "build_tools/tmp/zip_file/system/lib/modules"
-		
-		
-		# Generate updater-script and copy
-		# TODO updater-script generation
-		cp -rvf "build_tools/updater-script" "build_tools/tmp/zip_file/META-INF/com/google/android/"
-		
-		# Generate ZIP
-		work_dir=$PWD
-		echo "++ Changing working dir to tmp/zip_file"
-		cd "build_tools/tmp/zip_file"
-		echo "++ Creating zip file..."
-		zip flashable.zip -r *
-		echo "++ Returning back to work dir"
-		cd $work_dir
-		
-		# Copy zip file to build_tools/out
-		echo "++ Copying flashable zip from tmp to build_tools/out"
-		cp -rvf "$PWD/build_tools/tmp/zip_file/flashable.zip" "$PWD/build_tools/out"
-		
-		# Get build num
-		build_num=`cat .build_no`
-		BUILD_NUM="$BUILD_NUM_PREFIX$build_num"
-		
-		
-		# Renaming zip file
-		ZIP_FILE_NAME="$KERNEL_NAME$KERNEL_VERSION-$TIMESTAMP$BUILD_NUM.zip"
-		ZIP_FILE_NAME_SIGNED="$KERNEL_NAME$KERNEL_VERSION-$TIMESTAMP$BUILD_NUM-SIGNED.zip"
-		echo "++ Renaming zip file to $ZIP_FILE_NAME"
-		mv "$PWD/build_tools/out/flashable.zip" "$PWD/build_tools/out/$ZIP_FILE_NAME"
-		echo " "
-		
-		# Sign zip file
-		echo "++ Signing zip file"
-		java -jar "build_tools/tools/SignApk/signapk.jar" "build_tools/tools/SignApk/testkey.x509.pem" "build_tools/tools/SignApk/testkey.pk8" "build_tools/out/$ZIP_FILE_NAME" "build_tools/out/$ZIP_FILE_NAME_SIGNED"
-		echo "++ Done."	
-		
-		# Cleanup
-		echo " "
-		echo "++ Removing tmp directory"
-		rm -rvf "build_tools/tmp"
-		
-		# Inform
-		echo " "
-		echo "++ Your flashable zip can be found in $PWD/build_tools/out"
-		echo "++ Unsigned flashable zip: $ZIP_FILE_NAME"
-		echo "++ Signed flashable zip: $ZIP_FILE_NAME_SIGNED"
-		
-		
-	fi
+function createVenv {
+	pyvenv --system-site-packages --copies "$venv_path"
 }
+
+### Check if you're running Arch
+echo "-> Checking if running on Arch Linux..."
+
+distro=`cat /etc/os-release | grep ID |  cut -d'=' -f 2`
+
+if [ "$distro" == "arch" ]; then
+	echo "+ Running on Arch Linux"
+	if [ -d "$venv_path" ]; then
+		echo "++ python27 virtual env. installed in $venv_path, activating"
+		source "$venv_path/bin/activate"
+	else
+		echo "++ python27 virtual env. not found, checking if installer is present..."
+		if [ hash pyvenv 2>/dev/null ]; then
+			echo "+++ pyvenv available, installing..."
+			createVenv
+		else
+			echo "+++ pyvenv binary not found, aborting..."
+			exit
+		fi
+	fi
+fi
+
+echo " "
+
+### Check for toolchains
+echo "-> Checking if toolchain is installed..."
+
+toolchain_path="$toolchains_dir/$toolchain_name/bin/arm-cortex_a15-linux-gnueabihf-"
+if [ -d "$toolchains_dir/$toolchain_name/bin/" ]; then
+	echo "+ Toolchain path set to $toolchain_path"
+else
+	echo "+ Toolchain not found on $toolchain_path, aborting..."
+	exit
+fi
+
+### We're alive, let's create needed variables
+echo " "
+echo "-> Setting variables:"
+export CROSS_COMPILE=$toolchain_path
+echo "+ CROSS_COMPILE=$CROSS_COMPILE"
+export ARCH=$device_arch
+echo "+ ARCH=$ARCH"
+echo "+ building config $defconfig_name"
+echo "+ Using $jobs threads"
+
+echo " "
+
+start_build;
 
 
