@@ -271,7 +271,7 @@ function start_build {
 				Reuse )
 					echo "+++ Configuration will be reused"
 					echo " "
-					$mess=1
+					$(mess=1)
 					
 					# Set build_num variable
 					if [ -e ".build_no" ]; then
