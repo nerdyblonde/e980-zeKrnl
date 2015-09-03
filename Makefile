@@ -1,7 +1,7 @@
 VERSION = 3
 PATCHLEVEL = 4
 SUBLEVEL = 0
-EXTRAVERSION =-v1.3
+EXTRAVERSION =-kk-dev
 NAME = Saber-toothed Squirrel
 
 # *DOCUMENTATION*
