@@ -380,7 +380,19 @@ function generate_bootImg {
 		# Sign zip file
 		echo "++ Signing zip file"
 		java -jar "build_tools/tools/SignApk/signapk.jar" "build_tools/tools/SignApk/testkey.x509.pem" "build_tools/tools/SignApk/testkey.pk8" "build_tools/out/$ZIP_FILE_NAME" "build_tools/out/$ZIP_FILE_NAME_SIGNED"
-		echo "++ Done, enjoy."	
+		echo "++ Done."	
+		
+		# Cleanup
+		echo " "
+		echo "++ Removing tmp directory"
+		rm -rvf "build_tools/tmp"
+		
+		# Inform
+		echo " "
+		echo "++ Your flashable zip can be found in $PWD/build_tools/out"
+		echo "++ Unsigned flashable zip: $ZIP_FILE_NAME"
+		echo "++ Signed flashable zip: $ZIP_FILE_NAME_SIGNED"
+		
 		
 	fi
 }
