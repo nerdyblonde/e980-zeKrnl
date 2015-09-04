@@ -34,6 +34,7 @@ modules.builtin
 *.gcno
 *.rej
 *.orig
+*.img
 
 #
 # Top-level generic files

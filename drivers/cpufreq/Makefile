@@ -2,6 +2,11 @@
 obj-$(CONFIG_CPU_FREQ)			+= cpufreq.o
 # CPUfreq stats
 obj-$(CONFIG_CPU_FREQ_STAT)             += cpufreq_stats.o
+# Retain CPU Policy after hotplug
+obj-$(CONFIG_CPU_FREQ_RETAIN_POLICY)	+= retain_cpu_policy.o
+
+# CPU Input Boost
+obj-$(CONFIG_CPU_INPUT_BOOST)		+= cpu_input_boost.o
 
 # CPUfreq governors 
 obj-$(CONFIG_CPU_FREQ_GOV_PERFORMANCE)	+= cpufreq_performance.o
@@ -17,6 +22,7 @@ obj-$(CONFIG_CPU_FREQ_GOV_INTELLIACTIVE)+= cpufreq_intelliactive.o
 obj-$(CONFIG_CPU_FREQ_GOV_LIONHEART)    += cpufreq_lionheart.o
 obj-$(CONFIG_CPU_FREQ_GOV_SMARTASSV2)   += cpufreq_smartass2.o
 obj-$(CONFIG_CPU_FREQ_GOV_ADAPTIVE)	+= cpufreq_adaptive.o
+obj-$(CONFIG_CPU_FREQ_GOV_ONDEMANDPLUS)  += cpufreq_ondemandplus.o
 
 # CPUfreq cross-arch helpers
 obj-$(CONFIG_CPU_FREQ_TABLE)		+= freq_table.o

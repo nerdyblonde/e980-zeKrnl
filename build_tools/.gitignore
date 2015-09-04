@@ -1,0 +1,4 @@
+# Gitignore for build_tools
+*.img
+*.cfg
+/zImage
