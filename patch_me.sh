@@ -32,7 +32,6 @@ if [[ $# -eq 1 ]]; then
 		# Check if cherry is already picked and set needed flag if yes.
 		while read -r picked; do
 			OLD_CHERRY_HASH=$picked
-			echo "$CHERRY_HASH == $OLD_CHERRY_HASH"
 			if [ "$CHERRY_HASH" == "$OLD_CHERRY_HASH" ]; then
 				echo -e ":: $line is already cherry-picked"
 				CHERRY_STATE=1
