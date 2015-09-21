@@ -1,8 +1,9 @@
 VERSION = 3
 PATCHLEVEL = 4
 SUBLEVEL = 0
-EXTRAVERSION =
+EXTRAVERSION =-lp-dev
 NAME = Saber-toothed Squirrel
+DEVEL_NAME=zeKrnl
 
 # *DOCUMENTATION*
 # To see a list of typical targets execute "make help"
