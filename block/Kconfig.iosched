@@ -83,6 +83,22 @@ config IOSCHED_SIO
 	  ensure fairness. The algorithm does not do any sorting but
 	  basic merging, trying to keep a minimum overhead. It is aimed
 	  mainly for aleatory access devices (eg: flash devices).
+	  
+config IOSCHED_VR
+	tristate "VR I/O Scheduler"
+	default y
+	---help---
+	  The VR is a very good scheduler with elements of the deadline
+	  scheduler. It is the best scheduler for benchmarks. It is said
+	  to be a bit unstable.
+
+config IOSCHED_ZEN
+	tristate "Zen I/O scheduler"
+	default y
+	---help---
+	  FCFS, dispatches are back-insterted, deadlines ensure fairness.
+	  Should work best with devices where there is no travel delay.
+
 choice
 	prompt "Default I/O scheduler"
 	default DEFAULT_CFQ
@@ -115,6 +131,11 @@ choice
 	config DEFAULT_SIO
 		bool "SIO" if IOSCHED_SIO=y
 
+	config DEFAULT_VR
+		bool "VR" if IOSCHED_VR=y
+
+	config DEFAULT_ZEN
+		bool "ZEN" if IOSCHED_ZEN=y
 endchoice
 
 config DEFAULT_IOSCHED
@@ -125,6 +146,8 @@ config DEFAULT_IOSCHED
 	default "fiops" if DEFAULT_FIOPS
 	default "sio" if DEFAULT_SIO
 	default "noop" if DEFAULT_NOOP
+	default "vr" if DEFAULT_VR
+	default "zen" if DEFAULT_ZEN
 
 endmenu
 
