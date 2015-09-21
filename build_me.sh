@@ -164,6 +164,10 @@ function generate_bootImg {
 		else
 			echo -e "+++ Failure, boot.img not generated"
 		fi
+	else
+		echo -e "+ ERROR: zImage not found. Was build a success?"
+		exit;
+	fi
 	
 	if [ $ZIP_GEN -eq 0 ] && [ BOOT_IMG_GEN -eq 0]; then
 		if [ -e "$PWD/build_tools/out/boot.img"	]; then
@@ -282,6 +286,8 @@ function generate_flashableZip {
 		echo -e "++ Unsigned flashable zip: $ZIP_FILE_NAME"
 		echo -e "++ Signed flashable zip: $ZIP_FILE_NAME_SIGNED"
 
+	else
+		echo -e "+ ERROR: no boot.img found. Build failed or -i switch omited."
 	fi
 }
 
