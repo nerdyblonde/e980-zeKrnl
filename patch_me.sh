@@ -27,7 +27,7 @@ if [[ $# -eq 1 ]]; then
 		CHERRY_STATE=0
 		
 		# cherry SHA1 hash
-		CHERRY_HASH=`echo $line | cut -d \  -f 2`
+		CHERRY_HASH=`echo $line | cut -d \  -f 1`
 
 		# Check if cherry is already picked and set needed flag if yes.
 		while read -r picked; do
