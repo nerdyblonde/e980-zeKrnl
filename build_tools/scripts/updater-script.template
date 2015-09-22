@@ -1,0 +1,33 @@
+assert(getprop("ro.product.device") == "e986" || getprop("ro.build.product") == "e986" || getprop("ro.product.device") == "e980" || getprop("ro.build.product") == "e980" || getprop("ro.product.device") == "geefhd" || getprop("ro.build.product") == "geefhd" || getprop("ro.product.device") == "e988" || getprop("ro.build.product") == "e988" || getprop("ro.product.device") == "gkatt" || getprop("ro.build.product") == "gkatt" || abort("This package is for device: e986,e980,geefhd,e988,gkatt; this device is " + getprop("ro.product.device") + "."););
+run_program("/sbin/busybox", "mount", "/system");
+ui_print("/*******************************/");
+ui_print("zeKrnl %%VERSION%% %%BRANCH%%");
+ui_print("Build number %%BUILD_NO%%")
+ui_print("Build time: %%BUILD_TIME%%")
+ui_print("Build date: %%BUILD_DATE%%")
+ui_print(" ");
+ui_print("Designed and built for LG Optimus G Pro E98x variants");
+ui_print(" ");
+ui_print("If you're not using TWRP or Philz Touch, ohwell.png");
+ui_print(" ");
+ui_print("Installer will now proceed...");
+ui_print("/*******************************/");
+ui_print(" ")
+ui_print("+ Extracting tools...");
+package_extract_dir("loki_tool", "/tmp");
+set_perm(0, 0, 0777, "/tmp/loki/loki.sh");
+set_perm(0, 0, 0777, "/tmp/loki/loki_tool");
+ui_print("+ Mounting /system");
+mount("ext4", "EMMC", "/dev/block/platform/msm_sdcc.1/by-name/system", "/system");
+show_progress(0.250000, 0);
+ui_print("+ Installing modules and thermald config");
+assert(package_extract_dir("system", "/system"));
+set_perm_recursive(0, 0, 0755, 0644, "/system/lib/modules");
+ui_print("+ Lokifying and installing kernel");
+package_extract_file("boot.img", "/tmp/boot.img");
+assert(run_program("/tmp/loki/loki.sh") == 0);
+show_progress(0.250000, 0);
+unmount("/system");
+ui_print("+ Over & out. Enjoy your goodies.");
+ui_print("/*******************************/");
+
