@@ -319,7 +319,7 @@ static int __cpuinit msm_cpufreq_init(struct cpufreq_policy *policy)
 {
 	int cur_freq;
 	int index;
-	int ret = 0;
+	//int ret = 0;
 	struct cpufreq_frequency_table *table;
 	struct cpufreq_work_struct *cpu_work = NULL;
 

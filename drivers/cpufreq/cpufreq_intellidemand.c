@@ -1307,7 +1307,9 @@ int set_two_phase_freq(int cpufreq)
 void set_two_phase_freq_by_cpu ( int cpu_nr, int cpufreq){
 	two_phase_freq_array[cpu_nr-1] = cpufreq;
 }
-
+#if defined(CONFIG_CPU_FREQ_GOV_INTELLIMM)
+static
+#endif
 int input_event_boosted(void)
 {
 	unsigned long flags;
