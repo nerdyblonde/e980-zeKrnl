@@ -64,9 +64,14 @@ KERNEL_NAME=$(sed -n '/DEVEL_NAME/p' Makefile | head -1 | cut -d'=' -f 2)
 
 # Kernel version appendix
 KERNEL_VERSION=$(sed -n '/EXTRAVERSION/p' Makefile | head -1 | cut -d'=' -f 2)
+KERNEL_BRANCH=$(echo $KERNEL_VERSION | cut -d'_' -f 2)
+REAL_VERSION=$(echo $KERNEL_VERSION | cut -d'_' -f 1)
+
 
 # Build timestamp
 TIMESTAMP=$(date +"%d%m%Y-%H%M%S")
+BUILD_START_TIME=$(date +"%H:%M:S")
+BUILD_START_DATE=$(date + "%d.%m.%Y")
 
 # Build number prefix
 BUILD_NUM_PREFIX="_build_"
@@ -256,7 +261,14 @@ function generate_flashableZip {
 		# Generate updater-script and copy
 		echo -e "++ Generating updater-script"
 		# TODO updater-script generation in python; for now, use predefined
-		cp -rvf "build_tools/updater-script" "build_tools/tmp/zip_file/META-INF/com/google/android/"
+		#print("Please input in following order: build_date build_time build_no version branch path_to_save_updater-script")
+		eval python "build_tools/scripts/update_script_gen.py" "$BUILD_START_DATE" "$BUILD_START_TIME" "$BUILD_NUM" "$REAL_VERSION" "$KERNEL_BRANCH" "build_tools/tmp/zip_file/META-INF/com/google/android/updater-script"
+		#cp -rvf "build_tools/updater-script" "build_tools/tmp/zip_file/META-INF/com/google/android/"
+		result=$?
+		if [[ $result != 0 ]]; then
+			echo -e "++ Generation of updater-script failed... aborting."
+			exit
+		fi
 		echo -e " "
 		
 		# Generate ZIP
