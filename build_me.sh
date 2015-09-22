@@ -149,6 +149,34 @@ function generate_bootImg {
 		echo -e "++ Copying zImage..."
 		cp -rvf "arch/$ARCH/boot/zImage" "build_tools/tmp/boot"
 		
+		# Let's check  if zImage is bigger than in config
+		# - zImageSize
+		zImageSize=$(du -b $PWD/build_tools/tmp/boot/zImage | cut -f 1)
+		echo -e "++ zImage size: $zImageSize bytes"
+		# - initrd.img size
+		rdImageSize=$(du -b $PWD/build_tools/tmp/boot/initrd.img | cut -f 1)
+		echo -e "++ initrd size: $rdImageSize bytes"
+		# - get page size from boot.cfg
+		pageSizeHex=$(cat $PWD/build_tools/tmp/boot/bootimg.cfg | grep pagesize | cut -d'=' -f 2)
+		pageSize=$((pageSizeHex))
+		echo -e "++ pagesize is $pageSize bytes"		
+		# - get image size from boot.cfg
+		bImageSizeHex=$(cat $PWD/build_tools/tmp/boot/bootimg.cfg | grep bootsize | cut -d'=' -f 2)
+		bImageSize=$((bImageSizeHex))
+		echo -e "++ bootimg.cfg allows $bImageSize / $bImageSizeHex in hex"
+		
+		# - calculate expected size
+		newImageSize=$(python $PWD/build_tools/scripts/bootimg_size.py $zImageSize $rdImageSize 0 $pageSize)
+		
+		
+		if [[ $newImageSize -gt $bImageSize ]]; then
+			echo -e "++ zImage is bigger than set in bootimg.cfg; changing value in bootimg.cfg"
+			sed -ie "s/$bImageSizeHex/$newImageSize/" "$PWD/build_tools/tmp/boot/bootimg.cfg"
+		else
+			echo -e "++ No need to change bootimg.cfg, zImage size is not over limit"
+		fi
+		
+		
 		echo -e "++ Generating boot.img"
 		
 		abootimg --create "$PWD/build_tools/tmp/boot/boot.img" -f "$PWD/build_tools/tmp/boot/bootimg.cfg" -k "$PWD/build_tools/tmp/boot/zImage" -r "$PWD/build_tools/tmp/boot/initrd.img"
@@ -169,7 +197,7 @@ function generate_bootImg {
 		exit;
 	fi
 	
-	if [ $ZIP_GEN -eq 0 ] && [ BOOT_IMG_GEN -eq 0]; then
+	if [[ $ZIP_GEN -eq 0 ]] && [[ BOOT_IMG_GEN -eq 0 ]]; then
 		if [ -e "$PWD/build_tools/out/boot.img"	]; then
 			echo -e "+ Do you want to generate flashable zip?"
 				select ans in "y" "n"; do
@@ -190,7 +218,7 @@ function generate_bootImg {
 function generate_flashableZip {
 	# Generate flashable zip if boot image is created
 	echo -e " "
-	if [ -e "$PWD/build_tools/boot.img"	]; then
+	if [ -e "$PWD/build_tools/out/boot.img"	]; then
 		echo -e "+ Generating flashable zip"
 		# Create tmp directory if doesn't exist
 		if [ ! -d "build_tools/tmp" ]; then
