@@ -2,9 +2,9 @@ assert(getprop("ro.product.device") == "e986" || getprop("ro.build.product") == 
 run_program("/sbin/busybox", "mount", "/system");
 ui_print("/*******************************/");
 ui_print("zeKrnl %%VERSION%% %%BRANCH%%");
-ui_print("Build number %%BUILD_NO%%")
-ui_print("Build time: %%BUILD_TIME%%")
-ui_print("Build date: %%BUILD_DATE%%")
+ui_print("Build number %%BUILD_NO%%");
+ui_print("Build time: %%BUILD_TIME%%");
+ui_print("Build date: %%BUILD_DATE%%");
 ui_print(" ");
 ui_print("Designed and built for LG Optimus G Pro E98x variants");
 ui_print(" ");
@@ -12,7 +12,7 @@ ui_print("If you're not using TWRP or Philz Touch, ohwell.png");
 ui_print(" ");
 ui_print("Installer will now proceed...");
 ui_print("/*******************************/");
-ui_print(" ")
+ui_print(" ");
 ui_print("+ Extracting tools...");
 package_extract_dir("loki_tool", "/tmp");
 set_perm(0, 0, 0777, "/tmp/loki/loki.sh");
@@ -30,4 +30,3 @@ show_progress(0.250000, 0);
 unmount("/system");
 ui_print("+ Over & out. Enjoy your goodies.");
 ui_print("/*******************************/");
-
