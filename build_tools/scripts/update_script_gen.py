@@ -53,8 +53,8 @@ else:
 	buildDate = informations[1]
 	buildTime = informations[2]
 	buildNo = informations[3]
-	version = informations[4]
-	branch = informations[5].replace("-","",1)
+	version = informations[4].replace("-","",1)
+	branch = informations[5]
 	path = informations[6]
 	
 	# Load updater-script.template
