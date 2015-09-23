@@ -70,8 +70,8 @@ REAL_VERSION=$(echo $KERNEL_VERSION | cut -d'_' -f 1)
 
 # Build timestamp
 TIMESTAMP=$(date +"%d%m%Y-%H%M%S")
-BUILD_START_TIME=$(date +"%H:%M:S")
-BUILD_START_DATE=$(date + "%d.%m.%Y")
+BUILD_START_TIME=$(date +"%H:%M:%S")
+BUILD_START_DATE=$(date +"%d.%m.%Y")
 
 # Build number prefix
 BUILD_NUM_PREFIX="_build_"
@@ -238,9 +238,10 @@ function generate_flashableZip {
 		fi
 		
 		# Copy needed files to tmp dir
+		echo -e " "
 		echo -e "++ Copying needed files..."
 		
-		cp -rvf "build_tools/zip_file/" "build_tools/tmp/zip_file/"
+		cp -rvf "build_tools/zip_file/" "build_tools/tmp"
 		cp -rvf "build_tools/out/boot.img" "build_tools/tmp/zip_file/"
 		
 		# Check if there is modules directory tmp zip_file
@@ -250,20 +251,20 @@ function generate_flashableZip {
 		fi
 		
 		# Copy modules
+		echo -e " "
 		echo -e "++ Copying modules"
 		cp -rvf "drivers/crypto/msm/qce40.ko" "build_tools/tmp/zip_file/system/lib/modules"
 		cp -rvf "drivers/crypto/msm/qcedev.ko" "build_tools/tmp/zip_file/system/lib/modules"
 		cp -rvf "drivers/crypto/msm/qcrypto.ko" "build_tools/tmp/zip_file/system/lib/modules"
 		cp -rvf "drivers/scsi/scsi_wait_scan.ko" "build_tools/tmp/zip_file/system/lib/modules"
+		cp -rvf "block/test-iosched.ko" "build_tools/tmp/zip_file/system/lib/modules"
 		
 		echo -e " "
-		
+		# Get build number.
+		build_num=$(cat .build_no)
 		# Generate updater-script and copy
 		echo -e "++ Generating updater-script"
-		# TODO updater-script generation in python; for now, use predefined
-		#print("Please input in following order: build_date build_time build_no version branch path_to_save_updater-script")
-		eval python "build_tools/scripts/update_script_gen.py" "$BUILD_START_DATE" "$BUILD_START_TIME" "$BUILD_NUM" "$REAL_VERSION" "$KERNEL_BRANCH" "build_tools/tmp/zip_file/META-INF/com/google/android/updater-script"
-		#cp -rvf "build_tools/updater-script" "build_tools/tmp/zip_file/META-INF/com/google/android/"
+		eval python "build_tools/scripts/update_script_gen.py" "$BUILD_START_DATE" "$BUILD_START_TIME" "$build_num" "$REAL_VERSION" "$KERNEL_BRANCH" "build_tools/tmp/zip_file/META-INF/com/google/android/updater-script"
 		result=$?
 		if [[ $result != 0 ]]; then
 			echo -e "++ Generation of updater-script failed... aborting."
@@ -275,6 +276,7 @@ function generate_flashableZip {
 		work_dir=$PWD
 		echo -e "++ Changing working dir to tmp/zip_file"
 		cd "build_tools/tmp/zip_file/"
+		echo -e " "
 		echo -e "++ Creating zip file..."
 		zip flashable.zip -r .
 		echo -e "++ Returning back to work dir"
@@ -285,7 +287,7 @@ function generate_flashableZip {
 		cp -rvf "$PWD/build_tools/tmp/zip_file/flashable.zip" "$PWD/build_tools/out/flashable.zip"
 		
 		# Get build num
-		build_num=$(cat .build_no)
+		
 		BUILD_NUM="$BUILD_NUM_PREFIX$build_num"
 		
 		
@@ -317,8 +319,8 @@ function generate_flashableZip {
 		
 		# Cleanup
 		echo -e " "
-		echo -e "++ Removing tmp directory"
-		rm -rvf "build_tools/tmp"
+		echo -e "++ Cleaning up..."
+		rm -rf "build_tools/tmp"
 		
 		# Inform
 		echo -e " "
