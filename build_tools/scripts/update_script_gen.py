@@ -20,6 +20,13 @@
 #  
 import sys
 import datetime
+import os
+
+# get current path, because reasons.
+scriptPath = str(os.path.dirname(os.path.abspath(__file__)))
+# Set template filename
+templateFileName =  scriptPath+"/updater-script.template"
+print("Using template from ", templateFileName)
 
 # 'tags' to hunt
 tagDate='%%BUILD_DATE%%'
@@ -36,6 +43,10 @@ if total_ins < 7:
 	# Not enough data. I don't want to fail & I don't want to do builder's dirty work THAT much.
 	print("Missing data...")
 	print("Please input in following order: build_date build_time build_no version branch path_to_save_updater-script")
+	print("Given data:")
+	for i in informations:
+		print(" - ", i)
+		
 	exit(1)
 else:
 	# All fine, put input into responding fields
@@ -47,7 +58,7 @@ else:
 	path = informations[6]
 	
 	# Load updater-script.template
-	tmpFile = open("updater-script.template","r")
+	tmpFile = open(templateFileName,"r")
 	lines = tmpFile.readlines()
 	# Create new file
 	newFile = open(path,"w")
