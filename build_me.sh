@@ -47,7 +47,7 @@ venv_path="/media/data/py27_venv/"
 # - toolchain_name -> name of the directory toolchain is located
 
 toolchains_dir="/media/data/toolchains"
-toolchain_name="linaro_a15_484-2014.11"
+toolchain_name="UBER_arm-eabi-4.9"
 
 # Now, name of the configuration file...
 defconfig_name="zeKrnl_e980_defconfig"
@@ -658,7 +658,7 @@ echo -e " "
 ### Check for toolchains
 echo -e "-> Checking if toolchain is installed..."
 
-toolchain_path="$toolchains_dir/$toolchain_name/bin/arm-cortex_a15-linux-gnueabihf-"
+toolchain_path="$toolchains_dir/$toolchain_name/bin/arm-eabi-"
 if [ -d "$toolchains_dir/$toolchain_name/bin/" ]; then
 	echo -e "+ Toolchain path set to $toolchain_path"
 else
