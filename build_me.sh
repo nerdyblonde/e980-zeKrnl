@@ -120,12 +120,33 @@ function generate_bootImg {
 	
 	# Check if there is existing, example boot.img to use as template
 	echo -e " "
-	echo -e "+ Checking for templates (boot.img or extracted bootimg.cfg and initrd.img)"
-	if [ -e "$PWD/build_tools/boot_template/bootimg.cfg" ] && [ -e "$PWD/build_tools/boot_template/initrd.img" ]; then
-		echo -e "++ Template bootimg.cfg and initrd.img found, using them"
+	echo -e "+ Checking for templates (boot.img or extracted bootimg.cfg and initrd folder)"
+	if [ -e "$PWD/build_tools/boot_template/bootimg.cfg" ] && [ -d "$PWD/build_tools/boot_template/initrd" ]; then
+		echo -e "++ Template bootimg.cfg and initrd found, using them"
 		echo " "
 		cp -rvf "$PWD/build_tools/boot_template/bootimg.cfg" "$PWD/build_tools/tmp/boot"
-		cp -rvf "$PWD/build_tools/boot_template/initrd.img" "$PWD/build_tools/tmp/boot"
+		cp -rvf "$PWD/build_tools/boot_template/initrd" "$PWD/build_tools/tmp/boot"
+		
+		# Generate new initrd.img based on given folder...
+		echo -e " "
+		echo -e "++ Generating initrd.img..."
+		curPWD=$PWD
+		cd "$PWD/build_tools/tmp/boot/initrd"
+		echo -e "+++ Working in $PWD"
+		find . | cpio --create --format='newc' > ../initrd
+		cd ..
+		gzip initrd
+		mv initrd.gz initrd.img
+		if [ -e "initrd.img" ]; then
+			echo -e "+++ initrd.img generated..."
+		else
+			echo -e "+++ initrd.img generation failed; aborting build."
+			exit
+		fi
+		# return back to working dir...
+		cd "$curPWD"
+		echo "+++ Back in $PWD"	
+		
 		
 	elif [ -e "$PWD/build_tools/template_img/$template_bootimg" ]; then
 	
@@ -153,6 +174,8 @@ function generate_bootImg {
 		
 		echo -e "++ Copying zImage..."
 		cp -rvf "arch/$ARCH/boot/zImage" "build_tools/tmp/boot"
+		
+		
 		
 		# Let's check  if zImage is bigger than in config
 		# - zImageSize
