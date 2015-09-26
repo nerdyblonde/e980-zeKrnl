@@ -126,12 +126,13 @@ function generate_bootImg {
 		echo " "
 		cp -rvf "$PWD/build_tools/boot_template/bootimg.cfg" "$PWD/build_tools/tmp/boot"
 		cp -rvf "$PWD/build_tools/boot_template/initrd" "$PWD/build_tools/tmp/boot"
+		mv "$PWD/build_tools/tmp/boot/initrd" "$PWD/build_tools/tmp/boot/initrd-tmp"
 		
 		# Generate new initrd.img based on given folder...
 		echo -e " "
 		echo -e "++ Generating initrd.img..."
 		curPWD=$PWD
-		cd "$PWD/build_tools/tmp/boot/initrd"
+		cd "$PWD/build_tools/tmp/boot/initrd-tmp"
 		echo -e "+++ Working in $PWD"
 		find . | cpio --create --format='newc' > ../initrd
 		cd ..
