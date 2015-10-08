@@ -1071,6 +1071,7 @@ static int __device_suspend(struct device *dev, pm_message_t state, bool async)
 		pm_wakeup_event(dev, 0);
 
 	if (pm_wakeup_pending()) {
+		pm_runtime_put_sync(dev);
 		async_error = -EBUSY;
 		goto Complete;
 	}
