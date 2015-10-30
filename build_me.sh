@@ -16,13 +16,16 @@
 #  MA 02110-1301, USA.
 
 ## Let me introduce myself...
-
-echo -e ">>>>> Kernel building script for LG Optimus G Pro E98x"
-echo -e ">>>>> Version 2, september 2015."
-echo -e ">>>>> Written by gromikakao @ github (https://github.com/gromikakao/)"
-echo -e "\t\t AKA ShadySquirrel @ XDA"
-echo -e ">>>>> Licenced as GPL, so you can share & edit"
-echo -e "\t\tjust don't make it forget who original author is"
+echo -e "#############################################################################################################"
+echo -e "###### zeKrnl building script"
+echo -e "######"
+echo -e "###### Version 2.1, 30/10/2015 - Ultimate Madness (tm) edition."
+echo -e "######"
+echo -e "###### Written by ShadySquirrel @ github (https://github.com/ShadySquirrel/) AKA ShadySquirrel @ XDA"
+echo -e "###### Big thanks to my Uni, for my lack of sleep and increased desire to do anything else but study."
+echo -e "######"
+echo -e "###### Licenced as GPL, so you can share & edit, just don't make it forget who original author is."
+echo -e "#############################################################################################################"
 echo -e " "
 echo -e " "
 
@@ -62,14 +65,21 @@ template_bootimg="boot-pac-lp.img"
 # Kernel name
 KERNEL_NAME=$(sed -n '/DEVEL_NAME/p' Makefile | head -1 | cut -d'=' -f 2)
 
-# Kernel version appendix
+# Mainline kernel version
+MAINLINE_VERSION=$(sed -n '/VERSION/p' Makefile | head -1 | cut -d'=' -f 2)
+MAINLINE_PATCHLV=$(sed -n '/PATCHLEVEL/p' Makefile | head -1 | cut -d'=' -f 2)
+MAINLINE_SUBLVLV=$(sed -n '/SUBLEVEL/p' Makefile | head -1 | cut -d'=' -f 2)
+
+MAINLINE="$MAINLINE_VERSION.$MAINLINE_PATCHLV.$MAINLINE_SUBLVLV"
+
+# Custom kernel version
 KERNEL_VERSION=$(sed -n '/EXTRAVERSION/p' Makefile | head -1 | cut -d'=' -f 2)
 KERNEL_BRANCH=$(echo $KERNEL_VERSION | cut -d'_' -f 2)
 REAL_VERSION=$(echo $KERNEL_VERSION | cut -d'_' -f 1)
 
 
 # Build timestamp
-TIMESTAMP=$(date +"%d%m%Y-%H%M%S")
+TIMESTAMP=$(date +"%d%m%y-%H%M")
 BUILD_START_TIME=$(date +"%H:%M:%S")
 BUILD_START_DATE=$(date +"%d.%m.%Y")
 
@@ -91,6 +101,9 @@ CLEAN_UP=0
 BOOT_IMG_GEN=0
 # - Generate flashable zip
 ZIP_GEN=0
+# - Sign flashable zip
+ZIP_SIGN=0
+
 
 # Function to generate boot image and flashable zip
 function generate_bootImg {
@@ -316,29 +329,40 @@ function generate_flashableZip {
 		
 		
 		# Renaming zip file
-		ZIP_FILE_NAME="$KERNEL_NAME$KERNEL_VERSION-$TIMESTAMP$BUILD_NUM.zip"
-		ZIP_FILE_NAME_SIGNED="$KERNEL_NAME$KERNEL_VERSION-$TIMESTAMP$BUILD_NUM-SIGNED.zip"
+		ZIP_FILE_NAME="$KERNEL_NAME-$MAINLINE$KERNEL_VERSION-$TIMESTAMP$BUILD_NUM.zip"
 		echo -e "++ Renaming zip file to $ZIP_FILE_NAME"
 		mv "$PWD/build_tools/out/flashable.zip" "$PWD/build_tools/out/$ZIP_FILE_NAME"
 		echo -e " "
 		
 		# Sign zip file
-		echo -e "++ Signing zip file"
-		java -jar "build_tools/tools/SignApk/signapk.jar" "build_tools/tools/SignApk/testkey.x509.pem" "build_tools/tools/SignApk/testkey.pk8" "build_tools/out/$ZIP_FILE_NAME" "build_tools/out/$ZIP_FILE_NAME_SIGNED"
-		echo -e "++ Done."	
+		if [[ ZIP_SIGN -eq 1 ]]; then
+			echo -e "++ Signing zip file"
+			ZIP_FILE_NAME_SIGNED="$KERNEL_NAME-$MAINLINE$KERNEL_VERSION-$TIMESTAMP$BUILD_NUM-SIGNED.zip"
+			java -jar "build_tools/tools/SignApk/signapk.jar" "build_tools/tools/SignApk/testkey.x509.pem" "build_tools/tools/SignApk/testkey.pk8" "build_tools/out/$ZIP_FILE_NAME" "build_tools/out/$ZIP_FILE_NAME_SIGNED"
+			echo -e "++ Done."	
+		fi
 		
 		# Generate MD5 sums for zips
 		echo -e " "
 		echo -e "++ Generating MD5 sums for zip files..."
 		cur_dir="$PWD"
 		cd "$PWD/build_tools/out/"
+		
 		md5sum_nosign=$(md5sum $ZIP_FILE_NAME)
-		md5sum_sign=$(md5sum $ZIP_FILE_NAME_SIGNED)
+		if [[ ZIP_SIGN -eq 1 ]]; then
+			md5sum_sign=$(md5sum $ZIP_FILE_NAME_SIGNED)
+		fi
+		
 		cd "$cur_dir"
+		
 		echo -e "++ $md5sum_nosign"
-		echo -e "++ $md5sum_sign"
+		if [[ ZIP_SIGN -eq 1 ]]; then
+			echo -e "++ $md5sum_sign"
+		fi
 		echo $md5sum_nosign >> "$PWD/build_tools/out/$ZIP_FILE_NAME.md5sum"
-		echo $md5sum_sign >> "$PWD/build_tools/out/$ZIP_FILE_NAME_SIGNED.md5sum"
+		if [[ ZIP_SIGN -eq 1 ]]; then
+			echo $md5sum_sign >> "$PWD/build_tools/out/$ZIP_FILE_NAME_SIGNED.md5sum"
+		fi
 	
 		
 		# Cleanup
@@ -357,158 +381,9 @@ function generate_flashableZip {
 	fi
 }
 
-
-## Function to start build in trivia mode
-function start_build {
-	mess=0
-	
-	echo -e "-> Starting build of $KERNEL_NAME$KERNEL_VERSION"
-	echo -e " "
-	
-	# Let's check does defconfig file exist
-	echo -e "+ Checking if $defconfig_name exists in $PWD/arch/$ARCH/configs/"
-	if [ ! -e "$PWD/arch/$ARCH/configs/$defconfig_name" ]; then
-		echo -e "++ ERROR: defconfig doesn't exist. Check the filename and file presence and try again"
-		exit
-	fi
-	
-	echo -e " "
-	# Let's check if make defconfig was already run
-	echo -e "+ Checking for existing configuration..."
-	if [ ! -e "$PWD/.config" ]; then
-		echo -e "++ Kernel configuration not found. Creating new..."
-		make $defconfig_name;
-		if [ -e ".build_no" ]; then
-			rm -rvf ".build_no"
-			echo -e "1" >> ".build_no"
-		else
-			echo -e "1" >> ".build_no"
-		fi		
-		
-		# Check if configuration is actually made
-		if [ -e "$PWD/.config" ]; then
-			echo -e " "
-			echo -e "+++ New configuration created, cleaning mess..."
-			echo -e " "
-			make clean
-		else
-			echo -e " "
-			echo -e "+++ ERROR: make defconfig never finished, aborting..."
-			exit
-		fi
-	else
-		echo -e "++ Kernel configuration found. Do you want to reuse it or write new?"
-		select ans in "New" "Reuse"; do
-			case $ans in
-				New )
-					echo -e " "
-					echo -e "+++ Clean up..."
-					make mrproper
-					echo -e " "
-					echo -e "+++ Writing new .config file...";
-					make $defconfig_name;
-					
-					# Set build_num variable
-					if [ -e ".build_no" ]; then
-						rm -rvf ".build_no"
-						echo -e "1" >> ".build_no"
-					else
-						echo -e "1" >> ".build_no"
-					fi	
-					
-					# Check if configuration is actually made
-					if [ -f "$PWD/.config" ]; then
-						echo -e "++++ New configuration created"
-					else
-						echo -e "++++ ERROR: make defconfig never finished, aborting..."
-						exit
-					fi
-					break;;
-				Reuse )
-					echo -e "+++ Configuration will be reused"
-					echo -e " "
-					mess=1
-					
-					# Set build_num variable
-					if [ -e ".build_no" ]; then
-						old_build_num=`cat .build_no`
-						new_build_num=$((old_build_num+1))
-						rm -r ".build_no"
-						echo -e "$new_build_num" >> ".build_no"
-					else
-						echo -e "1" >> ".build_no"
-					fi	
-					
-					break;;
-			esac
-		done
-	fi
-	
-	if [ $mess == 1 ]; then
-		echo -e "+ Your build folder is 'dirty', do you want to clean it?"
-		select ans in "y" "n"; do
-			case $ans in
-				y )
-					echo -e "++ Cleaning build dir..."
-					echo -e " "
-					make clean
-					$(mess=0)
-					break;;
-				n ) 
-					break;;
-			esac
-		done
-	fi
-	
-	echo -e " "		
-	# Check for any last minute changes
-	echo -e "+ Everything looks steady and ready. Do you want to make some final changes to the config?"
-	select yn in "y" "n"; do
-		case $yn in
-			y ) 
-				echo -e "++ Running make menuconfig. Don't forget to save!";
-				echo -e " ";
-				make menuconfig;
-				break;;
-			n ) 
-				echo -e "++ Ok, ready to continue."
-				echo -e " "
-				break;;
-		esac
-	done
-	echo -e "+ Press any key to start."
-	read blah
-	echo -e " "
-	echo -e "++ Starting build #$(cat .build_no)"
-	echo -e " "				
-	time make -j$jobs;
-	
-	# Check if build was a success and if yes, ask user for boot.img generation
-	if [ -e "$PWD/arch/$ARCH/boot/zImage" ]; then
-		echo -e " "
-		echo -e "+ Build successful. Do you want to generate boot img?"
-		select bla in "y" "n"; do
-			case $bla in
-				y ) 
-					generate_bootImg
-					echo -e " "
-					echo -e "+++++++++++++++ FINISHED +++++++++++++++++"
-					break;;
-				n )
-					echo -e "+++++++++++++++ FINISHED +++++++++++++++++"
-					exit;;
-			esac
-		done
-	else
-		echo -e " "
-		echo -e "+ Build failed; check output for errors and try again after fixing them"
-		exit
-	fi
-}
-
-## Function to start build with parameters given on command-line
+# Build function
 function start_build_cmd {
-	echo -e "-> Starting build of $KERNEL_NAME$KERNEL_VERSION"
+	echo -e "-> Starting build of $KERNEL_NAME-$MAINLINE$KERNEL_VERSION"
 	echo -e " "
 	
 	# Let's check does defconfig file exist
@@ -643,6 +518,7 @@ function print_error_msg {
 	echo -e "\t -g || --generate -> Generate new .config"
 	echo -e "\t -i || --img -> Generate boot.img"
 	echo -e "\t -z || --zip -> Generate flashable zip"
+	echo -e "\t -s || --sign -> Sign flashable zip"
 	echo -e "\t -h || --help -> displays this message"
 	echo -e "\t -j=# || --jobs=# -> number of jobs/threads"
 	echo -e "# is a numeric value; 1 for yes, 2 for no"
@@ -730,6 +606,11 @@ if [[ $# -gt 0 ]]; then
 			-z|--zip)
 				echo -e "+ Generate flashable zip"
 				ZIP_GEN=1
+				shift # past argument
+				;;
+			-s|--sign)
+				echo -e "+ Sign flashable zip"
+				ZIP_SIGN=1
 				shift # past argument
 				;;
 			-j=* | --jobs=*)
