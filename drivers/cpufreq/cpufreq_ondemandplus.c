@@ -92,13 +92,13 @@ static unsigned long timer_rate;
 #define DEFAULT_UP_THRESHOLD 95
 static unsigned long up_threshold;
 
-#define DEFAULT_DOWN_DIFFERENTIAL 62
+#define DEFAULT_DOWN_DIFFERENTIAL 65
 static unsigned long down_differential;
 
-#define DEFAULT_MIN_FREQ 162000
+#define DEFAULT_MIN_FREQ 384000
 static u64 allowed_min;
 
-#define DEFAULT_MAX_FREQ 1512000
+#define DEFAULT_MAX_FREQ 1728000
 static u64 allowed_max;
 
 #define DEFAULT_INTER_HIFREQ 1350000
@@ -113,7 +113,7 @@ static u64 suspend_frequency;
 #define DEFAULT_INTER_STAYCYCLES 2
 static unsigned long inter_staycycles;
 
-#define DEFAULT_STAYCYCLES_RESETFREQ 486000
+#define DEFAULT_STAYCYCLES_RESETFREQ 384000
 static u64 staycycles_resetfreq;
 
 #define DEFAULT_IO_IS_BUSY 2
