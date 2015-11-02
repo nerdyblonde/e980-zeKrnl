@@ -1,9 +1,9 @@
 VERSION=3
 PATCHLEVEL=4
 SUBLEVEL=0
-EXTRAVERSION=-v1.6.1_lp-dev-gfx
+EXTRAVERSION=-E980-V1
 NAME = Saber-toothed Squirrel
-DEVEL_NAME=zeKrnl
+DEVEL_NAME=GProj-Kernel
 
 # *DOCUMENTATION*
 # To see a list of typical targets execute "make help"
