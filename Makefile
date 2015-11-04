@@ -1,7 +1,7 @@
 VERSION=3
 PATCHLEVEL=4
-SUBLEVEL=0
-EXTRAVERSION=-v1.6.1_lp-dev-gfx
+SUBLEVEL=2
+EXTRAVERSION=-v1.7_lp-experimental
 NAME = Saber-toothed Squirrel
 DEVEL_NAME=zeKrnl
 
