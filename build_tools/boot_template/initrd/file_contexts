@@ -253,33 +253,6 @@
 /mnt/asec/[^/]+/[^/]+\.zip  u:object_r:asec_public_file:s0
 /mnt/asec/[^/]+/lib(/.*)?   u:object_r:asec_public_file:s0
 /data/app-asec(/.*)?        u:object_r:asec_image_file:s0
-#line 1 "device/lge/e980/sepolicy/file_contexts"
-/system/bin/bridgemgrd             u:object_r:bridge_exec:s0
-
-/dev/ks_bridge                     u:object_r:ksbridgehsic_device:s0
-/dev/efs_bridge                    u:object_r:efsbridgehsic_device:s0
-
-/dev/socket/mpctl                  u:object_r:mpctl_socket:s0
-
-/data/cam_socket.*                 u:object_r:camera_socket:s0
-
-/data/app/sensor_ctl_socket        u:object_r:sensors_socket:s0
-
-/sns(/.*)?                         u:object_r:sensors_persist_file:s0
-
-/sys/devices/platform/kgsl-3d0.0/kgsl/kgsl-3d0(/.*)?      u:object_r:sysfs_devices_system_cpu:s0
-
-/dev/block/platform/msm_sdcc.1/by-name/tz  u:object_r:modem_efs_partition_device:s0
-/dev/block/platform/msm_sdcc.1/by-name/pad u:object_r:modem_efs_partition_device:s0
-
-/sys/class/timed_output/vibrator/amp          u:object_r:vibeamp_sysfs:s0
-
-/sys/devices/virtual/input/lge_touch(/.*)?          u:object_r:touchpanel_sysfs:s0
-/sys/devices/platform/wcnss_wlan.0/thermal_mitigation     u:object_r:sysfs_thermal:s0
-/sys/module/pm8921_charger/parameters/thermal_mitigation  u:object_r:sysfs_thermal:s0
-/sys/devices/i2c-0/0-0038/backlight/lm3530/max_brightness u:object_r:sysfs_thermal:s0
-
-/sys/devices/virtual/input/lge_touch/keypad_enable     u:object_r:sysfs_writable:s0
 #line 1 "device/qcom/sepolicy/common/file_contexts"
 ##################################
 # Dev nodes
@@ -636,6 +609,33 @@
 #
 /sys/class/android_usb/f_rmnet_smd_sdio/transport  --  u:object_r:sysfs_rmnet:s0
 /sys/devices/virtual/android_usb/android0/f_rmnet_smd_sdio/transport  --  u:object_r:sysfs_rmnet:s0
+#line 1 "device/lge/e980/sepolicy/file_contexts"
+/system/bin/bridgemgrd             u:object_r:bridge_exec:s0
+
+/dev/ks_bridge                     u:object_r:ksbridgehsic_device:s0
+/dev/efs_bridge                    u:object_r:efsbridgehsic_device:s0
+
+/dev/socket/mpctl                  u:object_r:mpctl_socket:s0
+
+/data/cam_socket.*                 u:object_r:camera_socket:s0
+
+/data/app/sensor_ctl_socket        u:object_r:sensors_socket:s0
+
+/sns(/.*)?                         u:object_r:sensors_persist_file:s0
+
+/sys/devices/platform/kgsl-3d0.0/kgsl/kgsl-3d0(/.*)?      u:object_r:sysfs_devices_system_cpu:s0
+
+/dev/block/platform/msm_sdcc.1/by-name/tz  u:object_r:modem_efs_partition_device:s0
+/dev/block/platform/msm_sdcc.1/by-name/pad u:object_r:modem_efs_partition_device:s0
+
+/sys/class/timed_output/vibrator/amp          u:object_r:vibeamp_sysfs:s0
+
+/sys/devices/virtual/input/lge_touch(/.*)?          u:object_r:touchpanel_sysfs:s0
+/sys/devices/platform/wcnss_wlan.0/thermal_mitigation     u:object_r:sysfs_thermal:s0
+/sys/module/pm8921_charger/parameters/thermal_mitigation  u:object_r:sysfs_thermal:s0
+/sys/devices/i2c-0/0-0038/backlight/lm3530/max_brightness u:object_r:sysfs_thermal:s0
+
+/sys/devices/virtual/input/lge_touch/keypad_enable     u:object_r:sysfs_writable:s0
 #line 1 "vendor/slim/sepolicy/file_contexts"
 /cache/dalvik-cache(/.*)? u:object_r:dalvikcache_data_file:s0
 
