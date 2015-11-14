@@ -28,7 +28,7 @@ on init
 on fs
     mount_all ./fstab.geefhd
     restorecon_recursive /sns
-
+    
 on boot
     chown bluetooth bluetooth /sys/class/rfkill/rfkill0/type
     chown bluetooth bluetooth /sys/class/rfkill/rfkill0/state

@@ -2801,9 +2801,9 @@ static long binder_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		if (binder_context_mgr_uid != -1) {
 			if (binder_context_mgr_uid != current->cred->euid) {
 				printk(KERN_ERR "binder: BINDER_SET_"
-					"CONTEXT_MGR bad uid %d != %d\n",
-					current->cred->euid,
-					binder_context_mgr_uid);
+				       "CONTEXT_MGR bad uid %d != %d\n",
+				       current->cred->euid,
+				       binder_context_mgr_uid);
 				ret = -EPERM;
 				goto err;
 			}
