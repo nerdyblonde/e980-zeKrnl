@@ -1,8 +1,9 @@
 VERSION = 3
 PATCHLEVEL = 4
-SUBLEVEL = 108
-EXTRAVERSION =
+SUBLEVEL = 109
+EXTRAVERSION= -E980-V2
 NAME = Saber-toothed Squirrel
+DEVEL_NAME= NB_GProj-Kernel
 
 # *DOCUMENTATION*
 # To see a list of typical targets execute "make help"
